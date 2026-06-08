@@ -21,15 +21,25 @@ namespace CosplayEventBooking.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<CommunityLike> CommunityLikes { get; set; }
 
+        // --- THÊM BẢNG ADMINLOG CHUẨN ---
+        public DbSet<AdminLog> AdminLogs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            // --- CẤU HÌNH RÀNG BUỘC CHO ADMINLOG ---
+            modelBuilder.Entity<AdminLog>()
+                .HasOne(al => al.Admin)
+                .WithMany()
+                .HasForeignKey(al => al.AdminId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ServicePost>()
-        .HasOne(sp => sp.ServiceProvider) // Giả sử thuộc tính navigation tên là ServiceProvider
-        .WithMany() // Nếu User có danh sách ICollection<ServicePost> thì điền vào đây, vd: WithMany(u => u.ServicePosts)
-        .HasForeignKey(sp => sp.ServiceProviderId)
-        .OnDelete(DeleteBehavior.Restrict); // QUAN TRỌNG: Đổi thành Restrict hoặc NoAction
+                .HasOne(sp => sp.ServiceProvider) 
+                .WithMany() 
+                .HasForeignKey(sp => sp.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict); 
 
             // Cấu hình bảng Message (1 tin nhắn có 2 User: Người gửi và Người nhận)
             modelBuilder.Entity<Message>()
