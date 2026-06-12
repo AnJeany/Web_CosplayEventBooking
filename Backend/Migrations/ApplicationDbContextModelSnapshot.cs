@@ -34,6 +34,9 @@ namespace CosplayEventBooking.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("QrCode")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("ServicePostId")
                         .HasColumnType("uniqueidentifier");
 
@@ -96,6 +99,9 @@ namespace CosplayEventBooking.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("PostId")
                         .HasColumnType("uniqueidentifier");
 
@@ -103,6 +109,8 @@ namespace CosplayEventBooking.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.HasIndex("PostId");
 
@@ -193,6 +201,7 @@ namespace CosplayEventBooking.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("TicketPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Title")
@@ -276,6 +285,7 @@ namespace CosplayEventBooking.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Rules")
@@ -391,6 +401,11 @@ namespace CosplayEventBooking.Migrations
 
             modelBuilder.Entity("CosplayEventBooking.Entities.Comment", b =>
                 {
+                    b.HasOne("CosplayEventBooking.Entities.Comment", "Parent")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("CosplayEventBooking.Entities.CommunityPost", "Post")
                         .WithMany("Comments")
                         .HasForeignKey("PostId")
@@ -402,6 +417,8 @@ namespace CosplayEventBooking.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Parent");
 
                     b.Navigation("Post");
 
@@ -521,6 +538,11 @@ namespace CosplayEventBooking.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Event");
+                });
+
+            modelBuilder.Entity("CosplayEventBooking.Entities.Comment", b =>
+                {
+                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("CosplayEventBooking.Entities.CommunityPost", b =>

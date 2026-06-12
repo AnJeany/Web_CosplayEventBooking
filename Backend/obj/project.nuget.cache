@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "C65ZF8v7eIk=",
+  "dgSpecHash": "ujArNFt+B0s=",
   "success": true,
-  "projectFilePath": "D:\\project_aspnet_api\\CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
+  "projectFilePath": "d:\\project_aspnet_api\\Web_CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\antha\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\antha\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",

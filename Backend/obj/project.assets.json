@@ -3128,11 +3128,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\project_aspnet_api\\CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
+      "projectUniqueName": "D:\\project_aspnet_api\\Web_CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
       "projectName": "CosplayEventBooking",
-      "projectPath": "D:\\project_aspnet_api\\CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
+      "projectPath": "D:\\project_aspnet_api\\Web_CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
       "packagesPath": "C:\\Users\\antha\\.nuget\\packages\\",
-      "outputPath": "D:\\project_aspnet_api\\CosplayEventBooking\\Backend\\obj\\",
+      "outputPath": "D:\\project_aspnet_api\\Web_CosplayEventBooking\\Backend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

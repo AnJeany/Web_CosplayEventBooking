@@ -25,6 +25,15 @@ namespace CosplayEventBooking.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Cấu hình precision cho decimal để tránh SQL Server truncation
+            modelBuilder.Entity<Event>()
+                .Property(e => e.TicketPrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<ServicePost>()
+                .Property(sp => sp.Price)
+                .HasPrecision(18, 2);
+
             modelBuilder.Entity<ServicePost>()
         .HasOne(sp => sp.ServiceProvider) // Giả sử thuộc tính navigation tên là ServiceProvider
         .WithMany() // Nếu User có danh sách ICollection<ServicePost> thì điền vào đây, vd: WithMany(u => u.ServicePosts)
@@ -77,6 +86,13 @@ namespace CosplayEventBooking.Data
                 .HasOne(l => l.User)
                 .WithMany()
                 .HasForeignKey(l => l.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Cấu hình self-referential cho Comment (nested comment / reply)
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Parent)
+                .WithMany(c => c.Replies)
+                .HasForeignKey(c => c.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
