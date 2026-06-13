@@ -66,6 +66,28 @@ namespace CosplayEventBooking.Controllers
             });
         }
 
+        // POST: api/payments/demo/booking/{id}
+        [HttpPost("demo/booking/{id}")]
+        public async Task<IActionResult> DemoPaymentBooking(Guid id, [FromBody] DemoPaymentDto dto)
+        {
+            var booking = await _db.Bookings.FindAsync(id);
+
+            if (booking == null)
+            {
+                return NotFound("Booking not found.");
+            }
+
+            if (!Enum.TryParse<BookingStatus>(dto.Status, true, out var newStatus))
+            {
+                return BadRequest("Invalid status. Valid values include: Paid, Completed, etc.");
+            }
+
+            booking.Status = newStatus;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = $"Booking status successfully updated to {newStatus}", bookingId = booking.Id });
+        }
+
         // =====================================================================
         // Helper: Sinh mã QR ngẫu nhiên dựa trên bookingId + timestamp
         // Format: QR-{BookingId8Chars}-{RandomSuffix8Chars}-{UnixTimestamp}
@@ -79,5 +101,10 @@ namespace CosplayEventBooking.Controllers
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             return $"QR-{bookingPart}-{randomPart}-{timestamp}";
         }
+    }
+
+    public class DemoPaymentDto
+    {
+        public string Status { get; set; } = null!;
     }
 }

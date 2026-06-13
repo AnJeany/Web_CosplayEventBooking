@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CosBook - Nền tảng Quản lý Sự kiện & Booking Cosplay</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            500: '#ec4899', // Pink
+                            600: '#db2777',
+                            700: '#be185d',
+                        },
+                        accent: {
+                            500: '#8b5cf6', // Purple
+                            600: '#7c3aed',
+                        },
+                        darkBg: '#090d16',
+                        darkCard: '#111827',
+                        darkBorder: '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            color: #f3f4f6;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ec4899;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-brand-500 selection:text-white overflow-x-hidden">
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ROLE SWITCHER FLOATING PANEL -->
+    <div class="fixed bottom-6 left-6 z-40 bg-slate-900/90 backdrop-blur-md border border-slate-800 p-4 rounded-2xl shadow-2xl max-w-xs transition-all duration-300 hover:border-brand-500">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="flex h-3 w-3 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
+            </span>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Trình Demo Vai Trò</h4>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">Bấm nút để đổi vai trò tài khoản trải nghiệm luồng tính năng khác nhau.</p>
+        <div class="grid grid-cols-1 gap-2">
+            <button onclick="switchRole('user')" id="btn-role-user" class="w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-brand-500 text-white">
+                <span>👤 Khách Tham Dự (User)</span>
+                <span class="bg-white/20 text-[10px] px-1.5 py-0.5 rounded text-white">Active</span>
+            </button>
+            <button onclick="switchRole('service')" id="btn-role-service" class="w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                <span>📸 Dịch Vụ (PTG / MUA)</span>
+                <span class="hidden bg-white/20 text-[10px] px-1.5 py-0.5 rounded text-white">Active</span>
+            </button>
+            <button onclick="switchRole('btc')" id="btn-role-btc" class="w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                <span>🎪 Ban Tổ Chức (BTC)</span>
+                <span class="hidden bg-white/20 text-[10px] px-1.5 py-0.5 rounded text-white">Active</span>
+            </button>
+        </div>
+        <div class="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center">
+            <span class="text-[10px] text-slate-500">Đồ án: Quản lý sự kiện Cosplay</span>
+            <button onclick="toggleAdminPanel()" class="text-[10px] text-brand-400 hover:underline">Trang Admin Tổng ⚙️</button>
+        </div>
+    </div>
+
+    <!-- MAIN NAVBAR -->
+    <nav class="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" onclick="goHome()" class="flex items-center gap-2">
+                <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-500 to-accent-500 flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-brand-500/20">
+                    C
+                </div>
+                <div class="leading-none">
+                    <span class="font-extrabold text-lg bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-accent-500">CosBook</span>
+                    <span class="block text-[9px] text-slate-400 font-medium uppercase tracking-wider">Event & Booking</span>
+                </div>
+            </a>
+
+            <!-- Navigation Links -->
+            <div class="hidden md:flex items-center gap-6">
+                <button onclick="goHome()" class="text-sm font-semibold hover:text-brand-500 transition-colors flex items-center gap-1 text-brand-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Sự Kiện
+                </button>
+                <button onclick="openChatHistory()" class="text-sm font-semibold hover:text-brand-500 text-slate-300 transition-colors flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    Tin Nhắn
+                </button>
+                <span class="h-4 w-px bg-slate-800"></span>
+                <span class="text-xs text-slate-400 flex items-center gap-1 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800">
+                    Vai trò hiện tại: <strong id="nav-role-badge" class="text-brand-400 uppercase">Khách tham dự</strong>
+                </span>
+            </div>
+
+            <!-- Profile & Actions -->
+            <div class="flex items-center gap-3">
+                <button onclick="openMyTickets()" class="relative p-2 text-slate-400 hover:text-white bg-slate-900 rounded-xl border border-slate-800 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                    <span id="nav-ticket-count" class="absolute -top-1 -right-1 bg-brand-500 text-[10px] text-white font-bold h-4 w-4 rounded-full flex items-center justify-center">1</span>
+                </button>
+                
+                <div class="flex items-center gap-2 bg-slate-900 pl-2 pr-3 py-1.5 rounded-full border border-slate-800">
+                    <img id="nav-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avatar" class="w-6 h-6 rounded-full object-cover ring-2 ring-brand-500">
+                    <span id="nav-username" class="text-xs font-semibold text-slate-200">Aria Cosplay</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN BODY CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:py-8">
+        <div id="app-view">
+            <!-- DYNAMIC VIEW RENDERED HERE -->
+        </div>
+    </main>
+
+    <!-- CHAT BOX PANEL (MODAL SIMULATION) -->
+    <div id="chat-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl flex flex-col h-[500px] overflow-hidden">
+            <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img id="chat-recipient-avatar" src="" alt="avatar" class="w-10 h-10 rounded-full object-cover border-2 border-brand-500">
+                    <div>
+                        <h4 id="chat-recipient-name" class="font-bold text-sm text-slate-100">---</h4>
+                        <span id="chat-recipient-role" class="text-[10px] text-brand-400 uppercase font-medium">PTG / MUA</span>
+                    </div>
+                </div>
+                <button onclick="closeChat()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-950/30">
+                <!-- Chat Bubbles rendered here -->
+            </div>
+
+            <div class="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-2">
+                <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." class="flex-1 bg-slate-950 text-slate-100 placeholder-slate-500 border border-slate-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-brand-500">
+                <button onclick="sendMessage()" class="bg-brand-500 hover:bg-brand-600 text-white p-2.5 rounded-xl transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOKING SERVICE / TICKET PAYMENT MODAL (DEMO MODE) -->
+    <div id="payment-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transition-all duration-300">
+            <!-- Warning Header -->
+            <div class="p-3 bg-gradient-to-r from-amber-500/20 to-brand-500/20 border-b border-slate-800 text-center text-xs text-amber-400 font-semibold flex items-center justify-center gap-1.5">
+                <span>⚠️ CHẾ ĐỘ DEMO ĐỒ ÁN MÔN HỌC (Không có thật)</span>
+            </div>
+
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-slate-100">Cổng Thanh Toán Giả Lập</h3>
+                    <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 mb-6">
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span>Sản phẩm/Dịch vụ:</span>
+                        <span id="pay-item-name" class="font-semibold text-slate-200">---</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span>Đơn vị nhận:</span>
+                        <span id="pay-recipient" class="font-semibold text-slate-200">---</span>
+                    </div>
+                    <hr class="border-slate-800">
+                    <div class="flex justify-between text-sm">
+                        <span class="font-bold text-slate-300">Tổng thanh toán:</span>
+                        <span id="pay-amount" class="font-extrabold text-brand-500 text-base">0đ</span>
+                    </div>
+                </div>
+
+                <!-- QR MOCK -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl mb-6 border border-slate-200 max-w-[200px] mx-auto">
+                    <!-- QR Box generated as inline SVG for robust offline mock -->
+                    <svg viewBox="0 0 100 100" class="w-28 h-28 text-slate-900">
+                        <!-- Simulated QR Code structure -->
+                        <path d="M0,0 h30 v30 h-30 z M70,0 h30 v30 h-30 z M0,70 h30 v30 h-30 z" fill="currentColor"/>
+                        <path d="M5,5 h20 v20 h-20 z M75,5 h20 v20 h-20 z M5,75 h20 v20 h-20 z" fill="#fff"/>
+                        <path d="M10,10 h10 v10 h-10 z M80,10 h10 v10 h-10 z M10,80 h10 v10 h-10 z" fill="currentColor"/>
+                        <rect x="40" y="40" width="20" height="20" fill="currentColor"/>
+                        <rect x="35" y="10" width="10" height="15" fill="currentColor"/>
+                        <rect x="10" y="35" width="15" height="10" fill="currentColor"/>
+                        <rect x="80" y="35" width="10" height="25" fill="currentColor"/>
+                        <rect x="35" y="80" width="25" height="10" fill="currentColor"/>
+                        <rect x="60" y="60" width="15" height="15" fill="currentColor"/>
+                    </svg>
+                    <span class="text-[9px] text-slate-500 mt-2 font-mono font-semibold tracking-wider">MÃ QR QUÉT DEMO</span>
+                </div>
+
+                <div class="text-center text-xs text-slate-400 mb-6">
+                    Mã thanh toán: <span id="pay-code" class="font-mono font-bold text-slate-200">BKCOS_XXXXXX</span>
+                </div>
+
+                <!-- Simulation Buttons -->
+                <div class="space-y-2">
+                    <button id="btn-confirm-payment" onclick="executeDemoPayment()" class="w-full bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all">
+                        <span>✨ Xác nhận thanh toán thành công (Bấm để Demo)</span>
+                    </button>
+                    <button onclick="closePaymentModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-semibold text-xs transition-all">
+                        Huỷ Giao Dịch
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN TICKETS / BOOKINGS PANEL -->
+    <div id="tickets-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    🎟️ Vé & Lịch Đã Đặt của tôi
+                </h3>
+                <button onclick="closeMyTickets()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-4 overflow-y-auto flex-1 space-y-6">
+                <!-- VÉ SỰ KIỆN -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase text-slate-400 mb-2">🎟️ Vé Sự Kiện Đã Đăng Ký</h4>
+                    <div id="user-tickets-list" class="space-y-2">
+                        <!-- Mock Ticket Item -->
+                    </div>
+                </div>
+
+                <!-- LỊCH BOOK PTG/MUA -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase text-slate-400 mb-2">📸 Lịch Booking Dịch Vụ</h4>
+                    <div id="user-bookings-list" class="space-y-2">
+                        <!-- Mock Booking Item -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOCK DATABASE FOR IN-MEMORY EXPERIENCE -->
+    <script>
+        // MOCK STATE (Hệ thống state giả lập trong RAM để người dùng tương tác lưu trạng thái)
+        const state = {
+            currentRole: 'user', // user, service, btc
+            serviceSubtype: 'ptg', // ptg, mua
+            activeEventId: null, // null = homepage, 1, 2, 3
+            activeTab: 'timeline', // timeline, explore, booking, booth, manage
+            
+            currentUser: {
+                username: "Aria Cosplay",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+                role: "user"
+            },
+
+            // Danh sách sự kiện
+            events: [
+                {
+                    id: 1,
+                    title: "Cosplay Summer Festa 2026",
+                    banner: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&q=80&w=1200",
+                    date: "23/07/2026 - 24/07/2026",
+                    location: "Nhà Thi Đấu Phú Thọ, TP. Hồ Chí Minh",
+                    ticketType: "Paid",
+                    price: 150000,
+                    hasBooths: true,
+                    boothFree: false,
+                    desc: "Sự kiện cosplay quy tụ hàng ngàn cosplayer phía Nam cùng chuỗi gian hàng, cuộc thi runway hoành tráng.",
+                    stages: "Cosplay Runway, Guest Star Meet, DJ Anime Show"
+                },
+                {
+                    id: 2,
+                    title: "Hanoi Anime & Manga Festival 2026",
+                    banner: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=1200",
+                    date: "15/08/2026",
+                    location: "Cung Triển Lãm Quy Hoạch Quốc Gia, Hà Nội",
+                    ticketType: "Free",
+                    price: 0,
+                    hasBooths: true,
+                    boothFree: true,
+                    desc: "Lễ hội văn hóa Nhật Bản quy mô lớn tại Hà Nội, hoạt động ngoài trời thoáng đãng, booth chụp ảnh ngoài trời cực chill.",
+                    stages: "Singing Contest, Cosplay Group Performance"
+                },
+                {
+                    id: 3,
+                    title: "Da Nang Cosplay Beach Party",
+                    banner: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1200",
+                    date: "02/09/2026",
+                    location: "Công viên Biển Đông, Đà Nẵng",
+                    ticketType: "Free",
+                    price: 0,
+                    hasBooths: false,
+                    boothFree: false,
+                    desc: "Fes cosplay biển cực sôi động lần đầu tiên xuất hiện tại Đà Nẵng. Free hoàn toàn vé ra vào.",
+                    stages: "Beach Cosplay Gala, Fire Dance, Water Splash Event"
+                }
+            ],
+
+            // Bài viết Timeline (Thông báo của BTC)
+            timelinePosts: [
+                { id: 101, eventId: 1, title: "🔥 BẬT MÍ KHÁCH MỜI GUEST STAR HẠNG A!", content: "Hân hạnh chào đón cosplayer HIKARI đến từ Nhật Bản sẽ trực tiếp làm ban giám khảo chấm thi Runway năm nay. Link mua vé tham dự có sẵn ở mục Mua Vé!", time: "2 giờ trước", likes: 320, liked: false, comments: ["Tuyệt quá", "Phải mua vé ngay thôi!"] },
+                { id: 102, eventId: 1, title: "🎪 Sơ đồ vị trí gian hàng & Khu vực Booth PTG/MUA", content: "BTC xin thông báo sơ đồ bố trí khu vực Booth dành cho các bên thợ ảnh và chuyên viên trang điểm. Vị trí năm nay gần sảnh máy lạnh siêu mát mẻ.", time: "1 ngày trước", likes: 145, liked: false, comments: [] },
+                { id: 103, eventId: 2, title: "📢 Mở cổng Đăng ký Booth miễn phí cho thợ ảnh/Make up", content: "Vì sự kiện lần này phi lợi nhuận, các gian hàng dịch vụ được miễn toàn bộ chi phí đăng ký! Hãy nộp form sớm ở Tab bên cạnh nhé.", time: "1 ngày trước", likes: 89, liked: false, comments: ["Xịn quá BTC ơi", "Năm nay đi Hanoi thôii"] }
+            ],
+
+            // Bài viết Khám phá (Cộng đồng tự do)
+            explorePosts: [
+                { id: 201, eventId: 1, author: "Yumi Chan", role: "user", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150", content: "Mọi người ơi, đã ai lên đồ cosplay chuẩn bị cho Festa tháng 7 chưa ạ? Em đang cosplay bé Klee xinh xắn cực kì cần 1 thợ nháy dắt đi chụp đây ạ! 📸✨", images: ["https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=600"], likes: 45, liked: false, comments: ["Cho anh một slot chụp nhé em!", "Klee đáng yêu quá!"], reports: 0 },
+                { id: 202, eventId: 1, author: "Kiên Photography", role: "service", serviceType: "ptg", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150", content: "Show nhẹ một vài ảnh chụp đợt Festival năm ngoái ạ. Nhận chụp cosplay solo, couple, nhóm. Thiết bị chuyên nghiệp, có đèn rọi xịn sò. Chỉ nhận 5 slots booking cho sự kiện sắp tới!", images: ["https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=600"], likes: 112, liked: false, comments: ["Nước ảnh trong vắt anh ơi", "Nhắn em xin bảng giá dịch vụ"], reports: 0 }
+            ],
+
+            // Danh sách thợ PTG / MUA đăng ký dịch vụ trong sự kiện
+            serviceProviders: [
+                { id: 301, eventId: 1, name: "Kaito Photography", type: "ptg", rating: 4.9, reviews: 24, price: 350000, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150", portfolio: "Chuyên chụp cosplay đêm, chỉnh màu ảo diệu fantasy. Thiết bị Sony A7R4 kèm lens 85mm GM.", samples: ["https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&q=80&w=300", "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&q=80&w=300"] },
+                { id: 302, eventId: 1, name: "Luna Makeup", type: "mua", rating: 5.0, reviews: 18, price: 200000, avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150", portfolio: "Chuyên makeup layout cổ trang Nhật Bản, đính đá, makeup mắt anime long lanh. Sử dụng mỹ phẩm chính hãng.", samples: ["https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=300"] }
+            ],
+
+            // Đơn xin đăng ký Booth chờ BTC duyệt
+            boothApplications: [
+                { id: 401, eventId: 1, name: "Studio Sài Gòn Cosplay", type: "ptg", size: "Booth 3x3m", status: "Approved", contact: "0901234567" }
+            ],
+
+            // Lịch sử giao dịch (Mô phỏng)
+            tickets: [
+                { id: "T-88123", eventId: 1, eventTitle: "Cosplay Summer Festa 2026", price: 150000, status: "Thành công", type: "Vé Vip" }
+            ],
+            bookings: [
+                { id: "B-9921", eventId: 1, eventTitle: "Cosplay Summer Festa 2026", providerName: "Kaito Photography", providerType: "ptg", date: "24/07/2026", time: "10:00 AM", style: "Cosplay đơn - Fate Grand Order", price: 350000, status: "Đã thanh toán (Thành công)" }
+            ],
+
+            // Database Chat mô phỏng
+            chats: [
+                { sender: "Kaito Photography", recipient: "Aria Cosplay", text: "Chào Aria, mình thấy lịch đặt của bạn rồi nha! Bạn định cos nhân vật nào để mình chuẩn bị tone màu ảnh trước?", time: "10:30" }
+            ]
+        };
+
+        // Giao dịch thanh toán tạm thời đang xử lý
+        let pendingTransaction = null;
+
+        // Tải trang khi load lần đầu
+        window.onload = function() {
+            renderApp();
+        };
+
+        // Toast notification helper
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `p-4 rounded-xl shadow-lg border text-xs font-semibold text-white flex items-center gap-2 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+                type === "success" ? "bg-emerald-600 border-emerald-500" : "bg-brand-600 border-brand-500"
+            }`;
+            toast.innerHTML = `
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Remove toast
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Chuyển đổi Role mô phỏng
+        function switchRole(role) {
+            state.currentRole = role;
+            
+            // Reset active tabs tùy theo phân quyền để giao diện hiển thị đúng
+            if (role === 'btc') {
+                state.currentUser.username = "BTC_Hội_Trưởng";
+                state.currentUser.avatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150";
+                state.activeTab = "manage";
+                showToast("Đã đổi sang vai trò: BAN TỔ CHỨC", "success");
+            } else if (role === 'service') {
+                state.currentUser.username = "Minh Studio (PTG)";
+                state.currentUser.avatar = "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=150";
+                state.activeTab = "booth";
+                showToast("Đã đổi sang vai trò: DỊCH VỤ (PTG/MUA)", "success");
+            } else {
+                state.currentUser.username = "Aria Cosplay";
+                state.currentUser.avatar = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
+                state.activeTab = "timeline";
+                showToast("Đã đổi sang vai trò: KHÁCH THAM DỰ", "success");
+            }
+
+            // Sync Navbar
+            document.getElementById("nav-role-badge").innerText = role === 'user' ? "Khách tham dự" : (role === 'btc' ? "Ban Tổ Chức" : "Dịch vụ (PTG/MUA)");
+            document.getElementById("nav-avatar").src = state.currentUser.avatar;
+            document.getElementById("nav-username").innerText = state.currentUser.username;
+
+            // Highlight button in panel
+            ['user', 'service', 'btc'].forEach(r => {
+                const btn = document.getElementById(`btn-role-${r}`);
+                if (r === role) {
+                    btn.className = "w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-brand-500 text-white";
+                    btn.querySelector('span:last-child').classList.remove('hidden');
+                } else {
+                    btn.className = "w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-slate-800 text-slate-300 hover:bg-slate-700";
+                    btn.querySelector('span:last-child').classList.add('hidden');
+                }
+            });
+
+            renderApp();
+        }
+
+        // Điều hướng chung
+        function goHome() {
+            state.activeEventId = null;
+            renderApp();
+        }
+
+        function renderApp() {
+            if (state.activeEventId === null) {
+                renderHomepage();
+            } else {
+                renderEventDetailPage(state.activeEventId);
+            }
+            updateNavigationCounts();
+        }
+
+        function updateNavigationCounts() {
+            document.getElementById("nav-ticket-count").innerText = state.tickets.length + state.bookings.length;
+        }
+
+        // TRANG CHỦ HỆ THỐNG
+        function renderHomepage() {
+            const container = document.getElementById("app-view");
+
+            // Lấy danh sách lọc (nếu có các trường lọc hoạt động)
+            const searchVal = document.getElementById("search-input")?.value || "";
+            const locationVal = document.getElementById("filter-location")?.value || "all";
+            const ticketVal = document.getElementById("filter-ticket")?.value || "all";
+
+            // Lọc sự kiện trong bộ nhớ
+            const filteredEvents = state.events.filter(ev => {
+                const matchSearch = ev.title.toLowerCase().includes(searchVal.toLowerCase());
+                const matchLocation = locationVal === "all" || ev.location.includes(locationVal);
+                const matchTicket = ticketVal === "all" || ev.ticketType === ticketVal;
+                return matchSearch && matchLocation && matchTicket;
+            });
+
+            container.innerHTML = `
+                <!-- Hero Banner -->
+                <div class="relative rounded-3xl overflow-hidden mb-8 bg-slate-900 border border-slate-800 h-[280px] md:h-[350px] flex items-center">
+                    <div class="absolute inset-0 bg-cover bg-center opacity-40 filter blur-[1px]" style="background-image: url('https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&q=80&w=1200');"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent"></div>
+                    
+                    <div class="relative z-10 p-6 md:p-12 max-w-xl space-y-3">
+                        <span class="bg-brand-500/20 text-brand-400 border border-brand-500/30 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Sự Kiện Hot Nhất</span>
+                        <h1 class="text-3xl md:text-5xl font-extrabold text-slate-100 tracking-tight leading-tight">Cosplay Summer Festa 2026</h1>
+                        <p class="text-xs md:text-sm text-slate-300">Dòng chảy văn hoá Anime-Manga bùng nổ, cuộc hội ngộ của các cosplayer xuất sắc, cùng cơ hội đặt lịch thợ ảnh hàng đầu ngay tại sự kiện!</p>
+                        <div class="pt-4">
+                            <button onclick="viewEventDetail(1)" class="bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-brand-500/20 hover:scale-105">
+                                Khám Phá & Đặt Vé Ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filters Section -->
+                <div class="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-5 mb-8 space-y-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        <h3 class="font-bold text-sm text-slate-200">Tìm kiếm & Bộ lọc sự kiện nhanh</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- Search Box -->
+                        <div class="relative col-span-1 md:col-span-2">
+                            <input type="text" id="search-input" value="${searchVal}" oninput="renderHomepage()" placeholder="Nhập tên sự kiện muốn tìm..." class="w-full bg-slate-950 text-slate-100 placeholder-slate-500 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-brand-500">
+                            <svg class="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+
+                        <!-- Location Filter -->
+                        <div>
+                            <select id="filter-location" onchange="renderHomepage()" class="w-full bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-brand-500">
+                                <option value="all" ${locationVal === 'all' ? 'selected' : ''}>📍 Tất cả địa điểm</option>
+                                <option value="Hồ Chí Minh" ${locationVal === 'Hồ Chí Minh' ? 'selected' : ''}>Hồ Chí Minh</option>
+                                <option value="Hà Nội" ${locationVal === 'Hà Nội' ? 'selected' : ''}>Hà Nội</option>
+                                <option value="Đà Nẵng" ${locationVal === 'Đà Nẵng' ? 'selected' : ''}>Đà Nẵng</option>
+                            </select>
+                        </div>
+
+                        <!-- Ticket Filter -->
+                        <div>
+                            <select id="filter-ticket" onchange="renderHomepage()" class="w-full bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-brand-500">
+                                <option value="all" ${ticketVal === 'all' ? 'selected' : ''}>🎟️ Loại Vé (Tất cả)</option>
+                                <option value="Free" ${ticketVal === 'Free' ? 'selected' : ''}>Vé Miễn Phí</option>
+                                <option value="Paid" ${ticketVal === 'Paid' ? 'selected' : ''}>Vé Có Phí</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Grid List -->
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                            <span>📅 Danh sách sự kiện</span>
+                            <span class="text-xs bg-brand-500/10 text-brand-400 px-2.5 py-0.5 rounded-full border border-brand-500/20">${filteredEvents.length} sự kiện</span>
+                        </h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        ${filteredEvents.length > 0 ? filteredEvents.map(ev => `
+                            <div class="bg-slate-900 border border-slate-800/80 rounded-2xl overflow-hidden hover:border-brand-500/50 transition-all duration-300 group flex flex-col justify-between h-[420px]">
+                                <!-- Card Header Banner -->
+                                <div class="relative h-44 overflow-hidden">
+                                    <img src="${ev.banner}" alt="${ev.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                                    <span class="absolute top-3 right-3 ${ev.ticketType === 'Free' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-brand-500/20 text-brand-400 border-brand-500/30'} border text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full">
+                                        ${ev.ticketType === 'Free' ? 'Miễn Phí' : `Có Phí: ${ev.price.toLocaleString('vi-VN')}đ`}
+                                    </span>
+                                </div>
+
+                                <!-- Card Content -->
+                                <div class="p-5 flex-1 flex flex-col justify-between">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-1.5 text-xs text-brand-400 font-semibold uppercase tracking-wider">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <span>${ev.date}</span>
+                                        </div>
+                                        <h3 class="font-bold text-slate-100 group-hover:text-brand-400 transition-colors line-clamp-1">${ev.title}</h3>
+                                        <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">${ev.desc}</p>
+                                    </div>
+
+                                    <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                                        <span class="flex items-center gap-1">
+                                            📍 ${ev.location.split(',').pop().trim()}
+                                        </span>
+                                        <span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px] font-medium">
+                                            ${ev.hasBooths ? 'Có Booth PTG' : 'Chỉ sự kiện'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Card Action -->
+                                <div class="px-5 pb-5">
+                                    <button onclick="viewEventDetail(${ev.id})" class="w-full bg-slate-800 hover:bg-brand-500 hover:text-white transition-all text-slate-300 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5">
+                                        Vào Trang Sự Kiện
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('') : `
+                            <div class="col-span-1 md:col-span-3 py-12 text-center text-slate-500">
+                                Không tìm thấy sự kiện nào khớp bộ lọc.
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ĐIỀU HƯỚNG VÀO TRANG CHI TIẾT SỰ KIỆN
+        function viewEventDetail(eventId) {
+            state.activeEventId = eventId;
+            state.activeTab = (state.currentRole === 'btc') ? 'manage' : 'timeline';
+            renderApp();
+        }
+
+        // TRANG CHI TIẾT SỰ KIỆN CHIA PHÂN KỲ TỪNG ĐỐI TƯỢNG
+        function renderEventDetailPage(eventId) {
+            const ev = state.events.find(e => e.id === eventId);
+            const container = document.getElementById("app-view");
+
+            // Xác định các Tab cần hiển thị tùy thuộc vào Cấu hình sự kiện & Phân quyền
+            let tabsHtml = `
+                <button onclick="switchEventTab('timeline')" class="px-4 py-3 font-semibold text-xs border-b-2 transition-all ${state.activeTab === 'timeline' ? 'border-brand-500 text-brand-400' : 'border-transparent text-slate-400 hover:text-white'}">
+                    🎪 Thông báo BTC
+                </button>
+                <button onclick="switchEventTab('explore')" class="px-4 py-3 font-semibold text-xs border-b-2 transition-all ${state.activeTab === 'explore' ? 'border-brand-500 text-brand-400' : 'border-transparent text-slate-400 hover:text-white'}">
+                    ✨ Khám Phá (${state.explorePosts.filter(p => p.eventId === eventId).length})
+                </button>
+            `;
+
+            // Nếu sự kiện cấu hình CÓ BOOTH PTG/MUA -> Mở Tab booking dịch vụ
+            if (ev.hasBooths) {
+                tabsHtml += `
+                    <button onclick="switchEventTab('booking')" class="px-4 py-3 font-semibold text-xs border-b-2 transition-all ${state.activeTab === 'booking' ? 'border-brand-500 text-brand-400' : 'border-transparent text-slate-400 hover:text-white'}">
+                        📸 Thuê Thợ Ảnh / Makeup
+                    </button>
+                `;
+            }
+
+            // Nếu vai trò là Bên Dịch vụ và Sự kiện có booth -> Hiện Tab Đăng ký booth
+            if (state.currentRole === 'service' && ev.hasBooths) {
+                tabsHtml += `
+                    <button onclick="switchEventTab('booth')" class="px-4 py-3 font-semibold text-xs border-b-2 transition-all ${state.activeTab === 'booth' ? 'border-brand-500 text-brand-400' : 'border-transparent text-slate-400 hover:text-white'}">
+                        🏪 Đăng Ký Booth
+                    </button>
+                `;
+            }
+
+            // Nếu vai trò là BTC -> Hiện Tab Quản lý Booth
+            if (state.currentRole === 'btc') {
+                tabsHtml += `
+                    <button onclick="switchEventTab('manage')" class="px-4 py-3 font-semibold text-xs border-b-2 transition-all ${state.activeTab === 'manage' ? 'border-brand-500 text-brand-400' : 'border-transparent text-slate-400 hover:text-white'}">
+                        🛠️ Quản Lý Đơn Đăng Ký (${state.boothApplications.filter(b => b.eventId === eventId).length})
+                    </button>
+                `;
+            }
+
+            container.innerHTML = `
+                <!-- Quay Lại -->
+                <button onclick="goHome()" class="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-brand-500 transition-colors mb-4 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Quay lại Trang Chủ
+                </button>
+
+                <!-- Event Header Section -->
+                <div class="relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
+                    <div class="h-44 md:h-52 bg-cover bg-center opacity-30" style="background-image: url('${ev.banner}');"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                    
+                    <div class="absolute bottom-5 left-5 right-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div class="space-y-2">
+                            <span class="bg-brand-500/10 text-brand-400 border border-brand-500/20 text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider">Trang Sự Kiện</span>
+                            <h2 class="text-xl md:text-3xl font-extrabold text-slate-100">${ev.title}</h2>
+                            <p class="text-xs text-slate-300 flex items-center gap-1">
+                                📍 ${ev.location} | 📅 ${ev.date}
+                            </p>
+                        </div>
+
+                        <!-- Ticket Purchase Trigger (Có phí hay Miễn phí) -->
+                        <div>
+                            ${ev.ticketType === 'Paid' ? `
+                                <button onclick="triggerTicketPurchase(${ev.id})" class="bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-brand-500/20 flex items-center gap-1.5">
+                                    🎫 Mua Vé Tham Dự (${ev.price.toLocaleString('vi-VN')}đ)
+                                </button>
+                            ` : `
+                                <button onclick="triggerTicketPurchase(${ev.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg flex items-center gap-1.5">
+                                    ✅ Đăng ký tham dự miễn phí
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation Bar -->
+                <div class="flex border-b border-slate-800 mb-6 overflow-x-auto">
+                    ${tabsHtml}
+                </div>
+
+                <!-- Tab Main Content Area -->
+                <div id="tab-content" class="min-h-[250px]">
+                    <!-- Render dynamic tab content here -->
+                </div>
+            `;
+
+            renderActiveTabContent(ev);
+        }
+
+        function switchEventTab(tabName) {
+            state.activeTab = tabName;
+            const ev = state.events.find(e => e.id === state.activeEventId);
+            renderActiveTabContent(ev);
+            
+            // Re-render tab classes inside container
+            const tabButtons = document.querySelectorAll('button[onclick^="switchEventTab"]');
+            tabButtons.forEach(btn => {
+                if (btn.getAttribute('onclick').includes(tabName)) {
+                    btn.className = "px-4 py-3 font-semibold text-xs border-b-2 transition-all border-brand-500 text-brand-400";
+                } else {
+                    btn.className = "px-4 py-3 font-semibold text-xs border-b-2 transition-all border-transparent text-slate-400 hover:text-white";
+                }
+            });
+        }
+
+        // RENDER TỪNG PHÂN KHU CHỨC NĂNG
+        function renderActiveTabContent(ev) {
+            const container = document.getElementById("tab-content");
+
+            if (state.activeTab === 'timeline') {
+                // TAB 1: DÒNG THỜI GIAN BTC
+                const pBtc = state.timelinePosts.filter(p => p.eventId === ev.id);
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Main Timeline Feed -->
+                        <div class="md:col-span-2 space-y-4">
+                            <!-- BTC New Post Creator (Chỉ khi vai trò là BTC) -->
+                            ${state.currentRole === 'btc' ? `
+                                <div class="bg-slate-900 border border-brand-500/30 rounded-2xl p-5 space-y-3">
+                                    <h4 class="text-xs font-bold text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        📢 Đăng thông báo mới (Chỉ dành cho BTC)
+                                    </h4>
+                                    <input type="text" id="btc-post-title" placeholder="Tiêu đề thông báo..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                                    <textarea id="btc-post-content" placeholder="Nội dung thông báo chương trình, quà tặng, khách mời..." rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500"></textarea>
+                                    <div class="flex justify-end">
+                                        <button onclick="createBtcPost(${ev.id})" class="bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all">
+                                            Đăng Thông Báo
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            <!-- Post List -->
+                            ${pBtc.map(post => `
+                                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-10 w-10 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-bold text-brand-500">
+                                                🎪
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-sm text-slate-200">${post.title}</h4>
+                                                <span class="text-[10px] text-slate-500">${post.time} • Bởi Ban Tổ Chức</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-slate-300 leading-relaxed whitespace-pre-line">${post.content}</p>
+                                    
+                                    <div class="pt-3 border-t border-slate-800/60 flex items-center gap-4 text-xs">
+                                        <button onclick="likeBtcPost(${post.id})" class="flex items-center gap-1.5 ${post.liked ? 'text-brand-500' : 'text-slate-400 hover:text-slate-200'}">
+                                            ❤️ <span>${post.likes} Thích</span>
+                                        </button>
+                                        <span class="text-slate-600">|</span>
+                                        <span class="text-slate-400 flex items-center gap-1.5">
+                                            💬 ${post.comments.length} Bình luận
+                                        </span>
+                                    </div>
+
+                                    <!-- Comments section -->
+                                    ${post.comments.length > 0 ? `
+                                        <div class="bg-slate-950 rounded-xl p-3 space-y-2 mt-2">
+                                            ${post.comments.map(c => `
+                                                <div class="text-[11px] text-slate-400 leading-relaxed">
+                                                    <strong class="text-slate-300">Người dùng:</strong> ${c}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <!-- Sidebar Info -->
+                        <div class="space-y-4">
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                                <h3 class="font-bold text-xs uppercase text-slate-400 tracking-wider">Thông tin hoạt động</h3>
+                                <div class="space-y-3 text-xs text-slate-300">
+                                    <div>
+                                        <strong class="block text-slate-400 text-[10px] uppercase">Vị Trí Sân Khấu:</strong>
+                                        Sảnh chính Nhà thi đấu
+                                    </div>
+                                    <div>
+                                        <strong class="block text-slate-400 text-[10px] uppercase">Hoạt động nổi bật:</strong>
+                                        ${ev.stages}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (state.activeTab === 'explore') {
+                // TAB 2: TRANG KHÁM PHÁ CỘNG ĐỒNG (MẠNG XÃ HỘI THU NHỎ)
+                const posts = state.explorePosts.filter(p => p.eventId === ev.id);
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Left Feed Columns -->
+                        <div class="md:col-span-2 space-y-4">
+                            <!-- Simple Creator Feed (Mọi vai trò đăng được thoải mái) -->
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <img src="${state.currentUser.avatar}" alt="user avatar" class="w-8 h-8 rounded-full object-cover">
+                                    <span class="text-xs text-slate-400">Đăng bài tự do lên góc Khám Phá!</span>
+                                </div>
+                                <textarea id="explore-post-text" placeholder="Hôm nay bạn thế nào? Hỏi han, tìm thợ nháy hay chia sẻ ảnh khoảnh khắc nào..." rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500"></textarea>
+                                
+                                <!-- Mock Image Upload Simulator -->
+                                <div class="flex items-center justify-between pt-1">
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="simulatePhotoAttachment()" class="text-xs text-slate-400 hover:text-brand-500 flex items-center gap-1 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg">
+                                            🖼️ Đính kèm ảnh mẫu
+                                        </button>
+                                        <span id="attached-photo-indicator" class="text-[10px] text-emerald-400 hidden">✓ Đã chọn 1 ảnh</span>
+                                    </div>
+                                    <button onclick="createExplorePost(${ev.id})" class="bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs px-5 py-2 rounded-xl transition-all">
+                                        Đăng bài viết
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Feed Posts -->
+                            ${posts.length > 0 ? posts.map(post => `
+                                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <img src="${post.avatar}" alt="${post.author}" class="w-10 h-10 rounded-full object-cover border border-slate-800">
+                                            <div>
+                                                <h4 class="font-bold text-sm text-slate-200 flex items-center gap-1.5">
+                                                    <span>${post.author}</span>
+                                                    <span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                                                        ${post.role === 'service' ? 'Thợ Ảnh/Makeup' : 'User'}
+                                                    </span>
+                                                </h4>
+                                                <span class="text-[9px] text-slate-500 block">Vừa đăng</span>
+                                            </div>
+                                        </div>
+                                        <!-- Report Trigger Button -->
+                                        <button onclick="reportExplorePost(${post.id})" class="text-[11px] text-slate-500 hover:text-red-400 transition-colors flex items-center gap-1">
+                                            🚨 Báo cáo
+                                        </button>
+                                    </div>
+
+                                    <p class="text-xs text-slate-300 leading-relaxed whitespace-pre-line">${post.content}</p>
+
+                                    <!-- Attached Images Grid -->
+                                    ${post.images && post.images.length > 0 ? `
+                                        <div class="grid grid-cols-1 gap-2 rounded-xl overflow-hidden max-h-[300px]">
+                                            ${post.images.map(img => `
+                                                <img src="${img}" alt="Attached post" class="w-full h-full object-cover">
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+
+                                    <!-- Interactions -->
+                                    <div class="pt-3 border-t border-slate-800/60 flex items-center gap-4 text-xs">
+                                        <button onclick="likeExplorePost(${post.id})" class="flex items-center gap-1.5 ${post.liked ? 'text-brand-500' : 'text-slate-400 hover:text-slate-200'}">
+                                            ❤️ <span>${post.likes} Thích</span>
+                                        </button>
+                                        <span class="text-slate-600">|</span>
+                                        <span class="text-slate-400 flex items-center gap-1.5">
+                                            💬 ${post.comments.length} Bình luận
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('') : `
+                                <div class="text-center py-10 text-slate-500 text-xs">Chưa có bài viết nào ở phân khu Khám Phá. Hãy là người đăng đầu tiên!</div>
+                            `}
+                        </div>
+
+                        <!-- Info Column -->
+                        <div class="space-y-4">
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                                <h3 class="font-bold text-xs uppercase text-slate-400 tracking-wider">💡 Nội Quy Khám Phá</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">
+                                    Nơi mọi người có thể tự do kết bạn, tìm kiếm ekip chụp ảnh, chia sẻ những khoảnh khắc vui tươi tại lễ hội mà không bị giới hạn. Vui lòng không spam hoặc đăng ảnh không lành mạnh.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (state.activeTab === 'booking') {
+                // TAB 3: THUÊ DỊCH VỤ PTG / MUA (DÀNH CHO KHÁCH THAM DỰ BOOK)
+                const providers = state.serviceProviders.filter(p => p.eventId === ev.id);
+                container.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-sm text-slate-200">Danh sách thợ ảnh (PTG) & chuyên viên trang điểm (MUA) sẵn sàng tại Fes</h3>
+                            <span class="text-xs text-slate-500">Tìm kiếm nhân sự cho layout cosplay của bạn</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            ${providers.map(prov => `
+                                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-brand-500 transition-all">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <img src="${prov.avatar}" alt="${prov.name}" class="w-12 h-12 rounded-full object-cover border-2 border-brand-500">
+                                            <div>
+                                                <h4 class="font-bold text-base text-slate-100">${prov.name}</h4>
+                                                <span class="text-[10px] bg-slate-800 text-brand-400 px-2 py-0.5 rounded uppercase font-bold tracking-wider">
+                                                    ${prov.type === 'ptg' ? '📸 THỢ ẢNH (PTG)' : '💄 MAKEUP ARTIST (MUA)'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="block text-xs text-slate-500">Bảng giá từ:</span>
+                                            <span class="font-bold text-brand-500">${prov.price.toLocaleString('vi-VN')}đ</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs text-slate-300 italic mb-3">"${prov.portfolio}"</p>
+                                        <!-- Portfolio Sample Images -->
+                                        <div class="grid grid-cols-2 gap-2">
+                                            ${prov.samples.map(sample => `
+                                                <img src="${sample}" alt="Sample work" class="h-24 w-full object-cover rounded-lg">
+                                            `).join('')}
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-3 border-t border-slate-800/60 flex items-center justify-between">
+                                        <div class="flex items-center gap-1 text-xs text-amber-400">
+                                            ⭐ <span>${prov.rating} (${prov.reviews} đánh giá)</span>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button onclick="openChatWith('${prov.name}', '${prov.type}', '${prov.avatar}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                                💬 Chat
+                                            </button>
+                                            <button onclick="triggerServiceBooking(${ev.id}, ${prov.id})" class="bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors">
+                                                Đặt Lịch Ngay
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (state.activeTab === 'booth') {
+                // TAB 4: ĐĂNG KÝ BOOTH (DÀNH CHO TÀI KHOẢN DỊCH VỤ PTG / MUA ĐĂNG KÝ VỚI BTC)
+                const myApp = state.boothApplications.find(b => b.eventId === ev.id);
+                container.innerHTML = `
+                    <div class="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                        <div class="space-y-1">
+                            <h3 class="font-bold text-base text-slate-100 flex items-center gap-1.5">
+                                🏪 Đăng Ký Booth Gian Hàng Dịch Vụ
+                            </h3>
+                            <p class="text-xs text-slate-400">Nộp form xét duyệt trực tiếp cho BTC sự kiện để có vị trí booth và mở tính năng nhận lịch đặt.</p>
+                        </div>
+
+                        ${myApp ? `
+                            <div class="bg-slate-950 p-4 rounded-xl border ${myApp.status === 'Approved' ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-500/30 bg-amber-500/5'} space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-slate-400">Trạng thái hồ sơ:</span>
+                                    <span class="text-xs font-bold uppercase ${myApp.status === 'Approved' ? 'text-emerald-400' : 'text-amber-400'}">
+                                        ${myApp.status === 'Approved' ? '● ĐÃ DUYỆT' : '● ĐANG XÉT DUYỆT'}
+                                    </span>
+                                </div>
+                                <div class="text-xs text-slate-300 space-y-1">
+                                    <p>• <strong>Thương hiệu:</strong> ${myApp.name}</p>
+                                    <p>• <strong>Phân loại:</strong> ${myApp.type === 'ptg' ? 'Thợ ảnh' : 'Make up'}</p>
+                                    <p>• <strong>Yêu cầu booth:</strong> ${myApp.size}</p>
+                                </div>
+                                ${myApp.status === 'Approved' ? `
+                                    <p class="text-[11px] text-emerald-400/90 pt-2 border-t border-slate-800">🎉 Đơn đã được BTC duyệt! Bạn có thể bắt đầu đăng bài và tiếp nhận lịch từ khách hàng.</p>
+                                ` : `
+                                    <p class="text-[11px] text-slate-500 pt-2 border-t border-slate-800">Hồ sơ đã được gửi đi thành công. Ban tổ chức sẽ duyệt hồ sơ của bạn sớm nhất.</p>
+                                `}
+                            </div>
+                        ` : `
+                            <!-- Application Form -->
+                            <form onsubmit="submitBoothApplication(event, ${ev.id})" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Tên thương hiệu / Nghệ danh</label>
+                                    <input type="text" id="booth-name" required placeholder="Nhập tên nghệ danh của bạn..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Loại dịch vụ</label>
+                                        <select id="booth-type" class="w-full bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-brand-500">
+                                            <option value="ptg">Nhiếp ảnh gia (PTG)</option>
+                                            <option value="mua">Trang điểm (MUA)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Chọn kích thước Booth</label>
+                                        <select id="booth-size" class="w-full bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-brand-500">
+                                            <option value="Booth Tiêu Chuẩn 3x3m">Booth Tiêu Chuẩn 3x3m</option>
+                                            <option value="Booth Đơn 2x2m">Booth Đơn 2x2m</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Số điện thoại liên hệ</label>
+                                    <input type="text" id="booth-contact" required placeholder="Nhập số điện thoại..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Mô tả hoặc Link Sản phẩm đã thực hiện</label>
+                                    <textarea id="booth-portfolio" placeholder="Link BeHance, drive ảnh portfolio..." rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500"></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-lg shadow-brand-500/20">
+                                    Nộp Form Xin Duyệt Booth
+                                </button>
+                            </form>
+                        `}
+                    </div>
+                `;
+            } else if (state.activeTab === 'manage') {
+                // TAB 5: BAN TỔ CHỨC QUẢN LÝ CÁC HOẠT ĐỘNG, DUYỆT BOOTH CỦA BÊN DỊCH VỤ
+                const apps = state.boothApplications.filter(b => b.eventId === ev.id);
+                container.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="space-y-1">
+                            <h3 class="font-bold text-base text-slate-100">Bảng điều khiển của Ban Tổ Chức</h3>
+                            <p class="text-xs text-slate-400">Danh sách các bên dịch vụ đăng ký xin đặt Booth chụp ảnh/makeup tại sự kiện của bạn.</p>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-950 text-[10px] uppercase tracking-wider text-slate-400 font-bold border-b border-slate-800">
+                                    <tr>
+                                        <th class="px-6 py-4">Tên nghệ danh/Studio</th>
+                                        <th class="px-6 py-4">Phân loại</th>
+                                        <th class="px-6 py-4">Kích thước</th>
+                                        <th class="px-6 py-4">Liên hệ</th>
+                                        <th class="px-6 py-4">Trạng thái</th>
+                                        <th class="px-6 py-4 text-right">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800">
+                                    ${apps.length > 0 ? apps.map(app => `
+                                        <tr class="hover:bg-slate-800/50">
+                                            <td class="px-6 py-4 font-bold text-slate-200">${app.name}</td>
+                                            <td class="px-6 py-4 uppercase">${app.type}</td>
+                                            <td class="px-6 py-4">${app.size}</td>
+                                            <td class="px-6 py-4">${app.contact}</td>
+                                            <td class="px-6 py-4">
+                                                <span class="px-2.5 py-1 rounded text-[10px] font-bold ${app.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
+                                                    ${app.status === 'Approved' ? 'ĐÃ DUYỆT' : 'CHỜ DUYỆT'}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                ${app.status !== 'Approved' ? `
+                                                    <button onclick="approveBooth(${app.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-1.5 rounded transition-all">
+                                                        Phê Duyệt
+                                                    </button>
+                                                ` : `
+                                                    <span class="text-slate-500 text-[10px]">Đã duyệt hoàn thành</span>
+                                                `}
+                                            </td>
+                                        </tr>
+                                    `).join('') : `
+                                        <tr>
+                                            <td colspan="6" class="px-6 py-8 text-center text-slate-500">Chưa có đơn đăng ký booth nào.</td>
+                                        </tr>
+                                    `}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // CHUYÊN MỤC BIẾN SỐ MÔ PHỎNG SẢN PHẨM ẢNH ĐÍNH KÈM
+        let simulatedPhoto = false;
+        function simulatePhotoAttachment() {
+            simulatedPhoto = true;
+            document.getElementById("attached-photo-indicator").classList.remove('hidden');
+            showToast("Đã đính kèm ảnh mẫu cosplay thành công!", "success");
+        }
+
+        // TẠO BÀI ĐĂNG TỰ DO TRONG TRANG KHÁM PHÁ (EXPLORE)
+        function createExplorePost(eventId) {
+            const txt = document.getElementById("explore-post-text").value;
+            if (!txt.trim()) {
+                showToast("Bạn chưa nhập nội dung bài viết!", "warning");
+                return;
+            }
+
+            const newPost = {
+                id: Date.now(),
+                eventId: eventId,
+                author: state.currentUser.username,
+                role: state.currentRole,
+                avatar: state.currentUser.avatar,
+                content: txt,
+                images: simulatedPhoto ? ["https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=600"] : [],
+                likes: 0,
+                liked: false,
+                comments: []
+            };
+
+            state.explorePosts.unshift(newPost);
+            
+            // Reset
+            simulatedPhoto = false;
+            document.getElementById("explore-post-text").value = "";
+            const indicator = document.getElementById("attached-photo-indicator");
+            if (indicator) indicator.classList.add('hidden');
+
+            showToast("Đã đăng bài viết mới thành công!", "success");
+            renderActiveTabContent(state.events.find(e => e.id === eventId));
+        }
+
+        // TẠO THÔNG BÁO BTC
+        function createBtcPost(eventId) {
+            const title = document.getElementById("btc-post-title").value;
+            const txt = document.getElementById("btc-post-content").value;
+            
+            if (!title.trim() || !txt.trim()) {
+                showToast("Vui lòng điền đủ tiêu đề và nội dung thông báo!", "warning");
+                return;
+            }
+
+            const newBtcPost = {
+                id: Date.now(),
+                eventId: eventId,
+                title: title,
+                content: txt,
+                time: "Vừa đăng",
+                likes: 0,
+                liked: false,
+                comments: []
+            };
+
+            state.timelinePosts.unshift(newBtcPost);
+            
+            showToast("Đã đăng thông báo BTC!", "success");
+            renderActiveTabContent(state.events.find(e => e.id === eventId));
+        }
+
+        // THÍCH BÀI ĐĂNG
+        function likeExplorePost(postId) {
+            const post = state.explorePosts.find(p => p.id === postId);
+            if (post) {
+                if (post.liked) {
+                    post.likes--;
+                    post.liked = false;
+                } else {
+                    post.likes++;
+                    post.liked = true;
+                }
+                renderActiveTabContent(state.events.find(e => e.id === state.activeEventId));
+            }
+        }
+
+        function likeBtcPost(postId) {
+            const post = state.timelinePosts.find(p => p.id === postId);
+            if (post) {
+                if (post.liked) {
+                    post.likes--;
+                    post.liked = false;
+                } else {
+                    post.likes++;
+                    post.liked = true;
+                }
+                renderActiveTabContent(state.events.find(e => e.id === state.activeEventId));
+            }
+        }
+
+        // BÁO CÁO VI PHẠM (REPORT SYSTEM - AN NINH)
+        function reportExplorePost(postId) {
+            const post = state.explorePosts.find(p => p.id === postId);
+            if (post) {
+                showToast("Đã gửi báo cáo bài viết vi phạm lên Admin hệ thống để xử lý!", "success");
+            }
+        }
+
+        // GỬI FORM ĐĂNG KÝ BOOTH
+        function submitBoothApplication(event, eventId) {
+            event.preventDefault();
+            const name = document.getElementById("booth-name").value;
+            const type = document.getElementById("booth-type").value;
+            const size = document.getElementById("booth-size").value;
+            const contact = document.getElementById("booth-contact").value;
+
+            const newApp = {
+                id: Date.now(),
+                eventId: eventId,
+                name: name,
+                type: type,
+                size: size,
+                contact: contact,
+                status: "Pending"
+            };
+
+            state.boothApplications.push(newApp);
+            showToast("Đã gửi hồ sơ đăng ký booth lên BTC. Vui lòng chờ phê duyệt!", "success");
+            renderActiveTabContent(state.events.find(e => e.id === eventId));
+        }
+
+        // BTC DUYỆT BOOTH GIAN HÀNG CỦA DỊCH VỤ
+        function approveBooth(appId) {
+            const app = state.boothApplications.find(a => a.id === appId);
+            if (app) {
+                app.status = "Approved";
+                showToast(`Đã duyệt booth cho ${app.name}!`, "success");
+                
+                // Đồng thời đẩy tài khoản này vào danh sách dịch vụ của sự kiện để người dùng có thể book được ngay
+                const mockAvatar = app.type === 'ptg' 
+                    ? "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150"
+                    : "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150";
+
+                state.serviceProviders.push({
+                    id: Date.now(),
+                    eventId: app.eventId,
+                    name: app.name,
+                    type: app.type,
+                    rating: 5.0,
+                    reviews: 0,
+                    price: app.type === 'ptg' ? 300000 : 150000,
+                    avatar: mockAvatar,
+                    portfolio: "Chuyên cung cấp dịch vụ tốt nhất tại sự kiện. Hãy đặt lịch sớm để trải nghiệm.",
+                    samples: [
+                        "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=300"
+                    ]
+                });
+
+                renderActiveTabContent(state.events.find(e => e.id === state.activeEventId));
+            }
+        }
+
+        // KÍCH HOẠT MUA VÉ (MÔ PHỎNG THANH TOÁN)
+        function triggerTicketPurchase(eventId) {
+            const ev = state.events.find(e => e.id === eventId);
+            
+            pendingTransaction = {
+                type: 'ticket',
+                eventId: ev.id,
+                name: `Vé tham dự: ${ev.title}`,
+                recipient: "Ban Tổ Chức Sự Kiện",
+                price: ev.price,
+                code: `BKCOS_${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+            };
+
+            document.getElementById("pay-item-name").innerText = pendingTransaction.name;
+            document.getElementById("pay-recipient").innerText = pendingTransaction.recipient;
+            document.getElementById("pay-amount").innerText = ev.price > 0 ? `${ev.price.toLocaleString('vi-VN')}đ` : 'Miễn Phí (Đăng ký)';
+            document.getElementById("pay-code").innerText = pendingTransaction.code;
+
+            document.getElementById("payment-modal").classList.remove('hidden');
+        }
+
+        // KÍCH HOẠT BOOKING PTG/MUA (MÔ PHỎNG THANH TOÁN)
+        function triggerServiceBooking(eventId, providerId) {
+            const ev = state.events.find(e => e.id === eventId);
+            const prov = state.serviceProviders.find(p => p.id === providerId);
+
+            pendingTransaction = {
+                type: 'booking',
+                eventId: ev.id,
+                name: `Dịch vụ chụp/trang điểm: ${prov.name}`,
+                recipient: prov.name,
+                price: prov.price,
+                code: `BKCOS_${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+                providerName: prov.name,
+                providerType: prov.type
+            };
+
+            document.getElementById("pay-item-name").innerText = pendingTransaction.name;
+            document.getElementById("pay-recipient").innerText = pendingTransaction.recipient;
+            document.getElementById("pay-amount").innerText = `${prov.price.toLocaleString('vi-VN')}đ`;
+            document.getElementById("pay-code").innerText = pendingTransaction.code;
+
+            document.getElementById("payment-modal").classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById("payment-modal").classList.add('hidden');
+            pendingTransaction = null;
+        }
+
+        // THỰC HIỆN GIAO DỊCH THANH TOÁN DEMO
+        function executeDemoPayment() {
+            if (!pendingTransaction) return;
+
+            const ev = state.events.find(e => e.id === pendingTransaction.eventId);
+
+            if (pendingTransaction.type === 'ticket') {
+                // Thêm vé mới
+                state.tickets.push({
+                    id: pendingTransaction.code,
+                    eventId: pendingTransaction.eventId,
+                    eventTitle: ev.title,
+                    price: pendingTransaction.price,
+                    status: "Thành công",
+                    type: "Vé Tiêu Chuẩn"
+                });
+                showToast("Mua vé thành công! Bạn có thể xem vé trong profile của mình.", "success");
+            } else {
+                // Thêm lịch booking mới
+                state.bookings.push({
+                    id: pendingTransaction.code,
+                    eventId: pendingTransaction.eventId,
+                    eventTitle: ev.title,
+                    providerName: pendingTransaction.providerName,
+                    providerType: pendingTransaction.providerType,
+                    date: "23/07/2026",
+                    time: "02:00 PM",
+                    style: "Cosplay đơn - Thiết kế tùy chỉnh",
+                    price: pendingTransaction.price,
+                    status: "Đã thanh toán (Thành công)"
+                });
+                showToast("Đặt lịch dịch vụ thành công! Đã gửi thông báo cho thợ.", "success");
+            }
+
+            closePaymentModal();
+            updateNavigationCounts();
+        }
+
+        // MỞ DANH SÁCH VÉ & LỊCH ĐÃ ĐẶT CỦA BẢN THÂN
+        function openMyTickets() {
+            const listTickets = document.getElementById("user-tickets-list");
+            const listBookings = document.getElementById("user-bookings-list");
+
+            listTickets.innerHTML = state.tickets.length > 0 ? state.tickets.map(t => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h5 class="font-bold text-xs text-slate-100">${t.eventTitle}</h5>
+                        <p class="text-[10px] text-slate-500">Mã vé: ${t.id} | Giá: ${t.price > 0 ? `${t.price.toLocaleString('vi-VN')}đ` : 'Miễn Phí'}</p>
+                    </div>
+                    <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2.5 py-1 rounded-full">
+                        ${t.status}
+                    </span>
+                </div>
+            `).join('') : '<div class="text-xs text-slate-500 py-2">Chưa đăng ký vé nào.</div>';
+
+            listBookings.innerHTML = state.bookings.length > 0 ? state.bookings.map(b => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h5 class="font-bold text-xs text-slate-100">${b.providerName}</h5>
+                            <p class="text-[9px] text-slate-500">${b.eventTitle}</p>
+                        </div>
+                        <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                            ${b.providerType === 'ptg' ? 'Thợ ảnh' : 'Makeup'}
+                        </span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 border-t border-slate-800 pt-2 space-y-1">
+                        <p>🕒 <strong>Thời gian:</strong> ${b.time} - ${b.date}</p>
+                        <p>👗 <strong>Phong cách:</strong> ${b.style}</p>
+                        <p>💵 <strong>Giá dịch vụ:</strong> ${b.price.toLocaleString('vi-VN')}đ (Đã thanh toán Demo)</p>
+                    </div>
+                </div>
+            `).join('') : '<div class="text-xs text-slate-500 py-2">Chưa đặt dịch vụ nào.</div>';
+
+            document.getElementById("tickets-modal").classList.remove('hidden');
+        }
+
+        function closeMyTickets() {
+            document.getElementById("tickets-modal").classList.add('hidden');
+        }
+
+        // MÔ PHỎNG CHAT MODULE CHUYÊN BIỆT
+        let activeChatWithUser = null;
+        function openChatWith(name, role, avatar) {
+            activeChatWithUser = { name, role, avatar };
+            document.getElementById("chat-recipient-name").innerText = name;
+            document.getElementById("chat-recipient-role").innerText = role === 'ptg' ? 'Thợ Ảnh (PTG)' : 'Trang điểm (MUA)';
+            document.getElementById("chat-recipient-avatar").src = avatar;
+
+            renderChatMessages();
+            document.getElementById("chat-modal").classList.remove('hidden');
+        }
+
+        function renderChatMessages() {
+            const chatBox = document.getElementById("chat-messages");
+            chatBox.innerHTML = state.chats.map(msg => `
+                <div class="flex ${msg.sender === state.currentUser.username ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[80%] rounded-2xl p-3 text-xs ${msg.sender === state.currentUser.username ? 'bg-brand-500 text-white' : 'bg-slate-800 text-slate-200'}">
+                        <p class="leading-relaxed">${msg.text}</p>
+                        <span class="block text-[8px] text-right mt-1 opacity-70">${msg.time}</span>
+                    </div>
+                </div>
+            `).join('');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("chat-input");
+            const text = input.value.trim();
+            if (!text) return;
+
+            // Đưa tin nhắn của user vào danh sách
+            state.chats.push({
+                sender: state.currentUser.username,
+                recipient: activeChatWithUser.name,
+                text: text,
+                time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+            });
+
+            input.value = "";
+            renderChatMessages();
+
+            // Trả lời tự động sau 1.5 giây để tăng tính trải nghiệm tương tác
+            setTimeout(() => {
+                state.chats.push({
+                    sender: activeChatWithUser.name,
+                    recipient: state.currentUser.username,
+                    text: `Dạ vâng ạ, cảm ơn bạn đã nhắn tin. Mình đã nhận được tin của bạn, bạn có thể tham khảo layout của mình ở mục Đặt lịch nhé!`,
+                    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                });
+                renderChatMessages();
+            }, 1500);
+        }
+
+        function closeChat() {
+            document.getElementById("chat-modal").classList.add('hidden');
+        }
+
+        function openChatHistory() {
+            // Mở đoạn hội thoại gần nhất
+            openChatWith("Kaito Photography", "ptg", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150");
+        }
+
+        // ADMIN PANEL MODAL (CHO THÊM ĐIỂM SÁNG TRONG ĐỒ ÁN)
+        function toggleAdminPanel() {
+            showToast("Hệ thống quản trị ADMIN PANEL - Hỗ trợ lọc nội dung, kiểm soát sự kiện, duyệt tài khoản đang phát triển thêm.", "success");
+        }
+    </script>
+</body>
+</html>

@@ -16,7 +16,56 @@ namespace CosplayEventBooking.Controllers
             _db = db;
         }
 
-        // POST /api/events
+        // GET: api/events
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Event>>> GetEvents(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] DateTime? startTime = null,
+            [FromQuery] DateTime? endTime = null,
+            [FromQuery] string? location = null)
+        {
+            var query = _db.Events.Include(e => e.Organizer).AsQueryable();
+
+            if (startTime.HasValue)
+            {
+                query = query.Where(e => e.StartTime >= startTime.Value);
+            }
+
+            if (endTime.HasValue)
+            {
+                query = query.Where(e => e.EndTime <= endTime.Value);
+            }
+
+            if (!string.IsNullOrEmpty(location))
+            {
+                query = query.Where(e => e.Location.Contains(location));
+            }
+
+            var events = await query
+                .OrderByDescending(e => e.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(events);
+        }
+
+        // GET: api/events/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Event>> GetEvent(Guid id)
+        {
+            var @event = await _db.Events.Include(e => e.Organizer).FirstOrDefaultAsync(e => e.Id == id);
+
+            if (@event == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(@event);
+        }
+
+        // POST: api/events
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromBody] CreateEventDto dto)
         {
@@ -42,21 +91,84 @@ namespace CosplayEventBooking.Controllers
             _db.Events.Add(newEvent);
             await _db.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(CreateEvent), new { id = newEvent.Id }, newEvent);
+            return CreatedAtAction(nameof(GetEvent), new { id = newEvent.Id }, newEvent);
         }
 
-        // GET /api/events
-        [HttpGet]
-        public async Task<IActionResult> GetEvents()
+        // PUT: api/events/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateEvent(Guid id, [FromBody] UpdateEventDto dto)
         {
-            var events = await _db.Events.Include(e => e.Organizer).ToListAsync();
-            return Ok(events);
+            var @event = await _db.Events.FindAsync(id);
+            if (@event == null)
+            {
+                return NotFound();
+            }
+
+            @event.Title = dto.Title;
+            @event.Description = dto.Description;
+            @event.Location = dto.Location;
+            @event.StartTime = dto.StartTime;
+            @event.EndTime = dto.EndTime;
+            @event.TicketPrice = dto.TicketPrice;
+            @event.TotalTickets = dto.TotalTickets;
+            @event.HasBooth = dto.HasBooth;
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!EventExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/events/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEvent(Guid id)
+        {
+            var @event = await _db.Events.FindAsync(id);
+            if (@event == null)
+            {
+                return NotFound();
+            }
+
+            _db.Events.Remove(@event);
+            await _db.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool EventExists(Guid id)
+        {
+            return _db.Events.Any(e => e.Id == id);
         }
     }
 
     public class CreateEventDto
     {
         public Guid OrganizerId { get; set; }
+        public string Title { get; set; } = null!;
+        public string Description { get; set; } = null!;
+        public string Location { get; set; } = null!;
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public decimal TicketPrice { get; set; }
+        public int TotalTickets { get; set; }
+        public bool HasBooth { get; set; }
+    }
+
+    public class UpdateEventDto
+    {
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
         public string Location { get; set; } = null!;
