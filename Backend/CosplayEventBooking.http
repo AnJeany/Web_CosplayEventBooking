@@ -1,6 +1,127 @@
 @CosplayEventBooking_HostAddress = http://localhost:5056
 
-GET {{CosplayEventBooking_HostAddress}}/weatherforecast/
-Accept: application/json
+### 1. Đăng ký tài khoản Khách hàng (Customer) - Tự động được duyệt (IsApproved = true)
+POST {{CosplayEventBooking_HostAddress}}/api/auth/register
+Content-Type: application/json
 
-###
+{
+  "email": "customer@gmail.com",
+  "password": "password123",
+  "fullName": "Khách Hàng Cosplay A",
+  "role": "Customer"
+}
+
+### 2. Đăng ký tài khoản Ban Tổ Chức (BTC / EventOrganizer) - Cần Admin duyệt (IsApproved = false)
+POST {{CosplayEventBooking_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "organizer@gmail.com",
+  "password": "password123",
+  "fullName": "Ban Tổ Chức Sự Kiện B",
+  "role": "EventOrganizer"
+}
+
+### 3. Đăng ký tài khoản Quản trị viên (Admin) - Mặc định được duyệt (IsApproved = true)
+POST {{CosplayEventBooking_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@gmail.com",
+  "password": "password123",
+  "fullName": "Admin Hệ Thống",
+  "role": "Admin"
+}
+
+### 4. Đăng nhập tài khoản Khách hàng (Thành công, nhận JWT Token)
+# @name customerLogin
+POST {{CosplayEventBooking_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "customer@gmail.com",
+  "password": "password123"
+}
+
+### 5. Đăng nhập tài khoản BTC trước khi duyệt (Thất bại - trả về BadRequest thông báo Đang chờ duyệt)
+POST {{CosplayEventBooking_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "organizer@gmail.com",
+  "password": "password123"
+}
+
+### 6. Đăng nhập tài khoản Admin (Thành công, nhận JWT Token)
+# @name adminLogin
+POST {{CosplayEventBooking_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@gmail.com",
+  "password": "password123"
+}
+
+### Lưu trữ token sau khi đăng nhập thành công
+@customerToken = {{customerLogin.response.body.token}}
+@adminToken = {{adminLogin.response.body.token}}
+
+### 7. Lấy thông tin cá nhân của Khách hàng
+GET {{CosplayEventBooking_HostAddress}}/api/profile
+Authorization: Bearer {{customerToken}}
+
+### 8. Cập nhật thông tin cá nhân của Khách hàng
+PUT {{CosplayEventBooking_HostAddress}}/api/profile
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Khách Hàng Cosplay Đã Đổi Tên",
+  "bio": "Yêu thích cosplay anime và manga Nhật Bản",
+  "avatarUrl": "/uploads/default-avatar.png"
+}
+
+### 9. Admin xem danh sách toàn bộ người dùng
+GET {{CosplayEventBooking_HostAddress}}/api/admin/users
+Authorization: Bearer {{adminToken}}
+
+### 10. Admin duyệt tài khoản Ban Tổ Chức (BTC / EventOrganizer)
+# Cần lấy ID của organizer từ danh sách trên rồi thay thế vào URL
+@organizerId = <hãy_thế_id_của_BTC_vào_đây>
+POST {{CosplayEventBooking_HostAddress}}/api/admin/users/{{organizerId}}/approve
+Authorization: Bearer {{adminToken}}
+
+### 11. Đăng nhập lại tài khoản BTC sau khi đã được duyệt (Thành công!)
+POST {{CosplayEventBooking_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "organizer@gmail.com",
+  "password": "password123"
+}
+
+### 12. Admin khóa tài khoản Khách hàng
+@customerId = <hãy_thế_id_của_Customer_vào_đây>
+POST {{CosplayEventBooking_HostAddress}}/api/admin/users/{{customerId}}/lock
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+"Vi phạm chính sách cộng đồng"
+
+### 13. Thử đăng nhập tài khoản Khách hàng bị khóa (Thất bại - trả về 403 Forbidden)
+POST {{CosplayEventBooking_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "customer@gmail.com",
+  "password": "password123"
+}
+
+### 14. Admin mở khóa tài khoản Khách hàng
+POST {{CosplayEventBooking_HostAddress}}/api/admin/users/{{customerId}}/unlock
+Authorization: Bearer {{adminToken}}
+
+### 15. Admin xem lịch sử hoạt động quản trị (Admin Logs)
+GET {{CosplayEventBooking_HostAddress}}/api/admin/logs
+Authorization: Bearer {{adminToken}}
+
