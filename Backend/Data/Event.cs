@@ -16,6 +16,8 @@ namespace CosplayEventBooking.Entities
         public decimal TicketPrice { get; set; }
         public int TotalTickets { get; set; }
         public bool HasBooth { get; set; }
+        public string? BannerUrl { get; set; }
+        public string? Stages { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public User Organizer { get; set; } = null!;

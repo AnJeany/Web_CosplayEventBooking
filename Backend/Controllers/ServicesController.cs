@@ -70,5 +70,54 @@ namespace CosplayEventBooking.Controllers
                 servicePost.CreatedAt
             });
         }
+
+        // =====================================================================
+        // GET /api/services
+        // Lấy danh sách dịch vụ (ServicePost) tại sự kiện (hỗ trợ query eventId).
+        // =====================================================================
+        [HttpGet]
+        public async Task<IActionResult> GetServices([FromQuery] Guid? eventId)
+        {
+            var query = _db.ServicePosts
+                .Include(sp => sp.ServiceProvider)
+                .Include(sp => sp.Event)
+                .AsQueryable();
+
+            if (eventId.HasValue)
+            {
+                query = query.Where(sp => sp.EventId == eventId.Value);
+            }
+
+            var servicePosts = await query
+                .OrderByDescending(sp => sp.CreatedAt)
+                .Select(sp => new
+                {
+                    sp.Id,
+                    sp.ServiceProviderId,
+                    sp.EventId,
+                    sp.Price,
+                    sp.MaxSlots,
+                    sp.Rules,
+                    sp.CreatedAt,
+                    ServiceProvider = new
+                    {
+                        sp.ServiceProvider.Id,
+                        sp.ServiceProvider.FullName,
+                        sp.ServiceProvider.Email,
+                        sp.ServiceProvider.AvatarUrl,
+                        sp.ServiceProvider.Bio,
+                        Role = sp.ServiceProvider.Role.ToString()
+                    },
+                    Event = new
+                    {
+                        sp.Event.Id,
+                        sp.Event.Title,
+                        sp.Event.Location
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(servicePosts);
+        }
     }
 }

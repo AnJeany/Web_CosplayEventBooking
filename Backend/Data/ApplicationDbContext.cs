@@ -43,7 +43,6 @@ namespace CosplayEventBooking.Data
                 .WithMany()
                 .HasForeignKey(al => al.AdminId)
                 .OnDelete(DeleteBehavior.Restrict);
-
             modelBuilder.Entity<ServicePost>()
                 .HasOne(sp => sp.ServiceProvider) 
                 .WithMany() 

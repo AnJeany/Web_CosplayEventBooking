@@ -98,6 +98,55 @@ namespace CosplayEventBooking.Controllers
 
             return Ok(new { message = "Check-in successful", ticketId = ticket.Id });
         }
+
+        // =====================================================================
+        // GET /api/tickets
+        // Lấy danh sách vé đã mua của khách hàng.
+        // =====================================================================
+        [HttpGet]
+        public async Task<IActionResult> GetTickets([FromQuery] Guid? customerId)
+        {
+            var query = _context.Tickets
+                .Include(t => t.Event)
+                .Include(t => t.Customer)
+                .AsQueryable();
+
+            if (customerId.HasValue)
+            {
+                query = query.Where(t => t.CustomerId == customerId.Value);
+            }
+
+            var tickets = await query
+                .OrderByDescending(t => t.CreatedAt)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.CustomerId,
+                    t.EventId,
+                    t.QrCode,
+                    Status = t.Status.ToString(),
+                    t.CreatedAt,
+                    Event = new
+                    {
+                        t.Event.Id,
+                        t.Event.Title,
+                        t.Event.Location,
+                        t.Event.TicketPrice,
+                        t.Event.StartTime,
+                        t.Event.EndTime,
+                        t.Event.BannerUrl
+                    },
+                    Customer = new
+                    {
+                        t.Customer.Id,
+                        t.Customer.FullName,
+                        t.Customer.Email
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(tickets);
+        }
     }
 
     public class PurchaseTicketDto

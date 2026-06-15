@@ -17,11 +17,11 @@ namespace CosplayEventBooking.Controllers
     [Route("api/admin")]
     public class AdminController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _db;
 
-        public AdminController(ApplicationDbContext context)
+        public AdminController(ApplicationDbContext db)
         {
-            _context = context;
+            _db = db;
         }
 
         // Helper to get Current Admin ID
@@ -47,25 +47,25 @@ namespace CosplayEventBooking.Controllers
                 Details = details,
                 Timestamp = DateTime.UtcNow
             };
-            _context.AdminLogs.Add(log);
-            await _context.SaveChangesAsync();
+            _db.AdminLogs.Add(log);
+            await _db.SaveChangesAsync();
         }
 
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _context.Users
+            var users = await _db.Users
                 .OrderByDescending(u => u.CreatedAt)
                 .ToListAsync();
 
-            var userDtos = users.Select(UserDto.FromEntity).ToList();
+            var userDtos = users.Select(u => UserDto.FromEntity(u)).ToList();
             return Ok(userDtos);
         }
 
         [HttpPost("users/{id}/approve")]
         public async Task<IActionResult> ApproveUser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _db.Users.FindAsync(id);
             if (user == null)
             {
                 return NotFound(new { Message = "Không tìm thấy người dùng." });
@@ -77,8 +77,8 @@ namespace CosplayEventBooking.Controllers
             }
 
             user.IsApproved = true;
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
+            _db.Users.Update(user);
+            await _db.SaveChangesAsync();
 
             await LogActionAsync("Phê duyệt tài khoản", user.Email, $"Đã phê duyệt tài khoản với vai trò {user.Role}.");
 
@@ -86,9 +86,9 @@ namespace CosplayEventBooking.Controllers
         }
 
         [HttpPost("users/{id}/lock")]
-        public async Task<IActionResult> LockUser(Guid id, [FromBody] string? reason)
+        public async Task<IActionResult> LockUser(Guid id, [FromBody] LockUserRequest request)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _db.Users.FindAsync(id);
             if (user == null)
             {
                 return NotFound(new { Message = "Không tìm thấy người dùng." });
@@ -105,10 +105,10 @@ namespace CosplayEventBooking.Controllers
             }
 
             user.IsLocked = true;
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
+            _db.Users.Update(user);
+            await _db.SaveChangesAsync();
 
-            var lockReason = reason ?? "Không có lý do cụ thể.";
+            var lockReason = request?.Reason ?? "Không có lý do cụ thể.";
             await LogActionAsync("Khóa tài khoản", user.Email, $"Lý do khóa: {lockReason}");
 
             return Ok(new { Message = "Khóa tài khoản thành công.", User = UserDto.FromEntity(user) });
@@ -117,7 +117,7 @@ namespace CosplayEventBooking.Controllers
         [HttpPost("users/{id}/unlock")]
         public async Task<IActionResult> UnlockUser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _db.Users.FindAsync(id);
             if (user == null)
             {
                 return NotFound(new { Message = "Không tìm thấy người dùng." });
@@ -129,8 +129,8 @@ namespace CosplayEventBooking.Controllers
             }
 
             user.IsLocked = false;
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
+            _db.Users.Update(user);
+            await _db.SaveChangesAsync();
 
             await LogActionAsync("Mở khóa tài khoản", user.Email, "Đã mở khóa hoạt động trở lại cho tài khoản.");
 
@@ -145,7 +145,7 @@ namespace CosplayEventBooking.Controllers
                 return BadRequest(new { Message = "Vui lòng cung cấp vai trò mới." });
             }
 
-            var user = await _context.Users.FindAsync(id);
+            var user = await _db.Users.FindAsync(id);
             if (user == null)
             {
                 return NotFound(new { Message = "Không tìm thấy người dùng." });
@@ -170,8 +170,8 @@ namespace CosplayEventBooking.Controllers
                 user.IsApproved = true;
             }
 
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
+            _db.Users.Update(user);
+            await _db.SaveChangesAsync();
 
             await LogActionAsync("Thay đổi quyền hạn", user.Email, $"Thay đổi vai trò từ {oldRole} sang {newRole}.");
 
@@ -181,7 +181,7 @@ namespace CosplayEventBooking.Controllers
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _db.Users.FindAsync(id);
             if (user == null)
             {
                 return NotFound(new { Message = "Không tìm thấy người dùng." });
@@ -193,11 +193,11 @@ namespace CosplayEventBooking.Controllers
             }
 
             // Bảo vệ tính toàn vẹn dữ liệu: Kiểm tra các liên kết khóa ngoại trước khi xóa
-            var hasRelatedData = await _context.Bookings.AnyAsync(b => b.CustomerId == id) ||
-                                 await _context.BoothRegistrations.AnyAsync(br => br.ServiceProviderId == id) ||
-                                 await _context.Tickets.AnyAsync(t => t.CustomerId == id) ||
-                                 await _context.ProfilePosts.AnyAsync(pp => pp.UserId == id) ||
-                                 await _context.Messages.AnyAsync(m => m.SenderId == id || m.ReceiverId == id);
+            var hasRelatedData = await _db.Bookings.AnyAsync(b => b.CustomerId == id) ||
+                                 await _db.BoothRegistrations.AnyAsync(br => br.ServiceProviderId == id) ||
+                                 await _db.Tickets.AnyAsync(t => t.CustomerId == id) ||
+                                 await _db.ProfilePosts.AnyAsync(pp => pp.UserId == id) ||
+                                 await _db.Messages.AnyAsync(m => m.SenderId == id || m.ReceiverId == id);
 
             if (hasRelatedData)
             {
@@ -209,8 +209,8 @@ namespace CosplayEventBooking.Controllers
             var userEmail = user.Email;
             var userRole = user.Role;
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            _db.Users.Remove(user);
+            await _db.SaveChangesAsync();
 
             await LogActionAsync("Xóa người dùng", userEmail, $"Đã xóa vĩnh viễn tài khoản có vai trò {userRole}.");
 
@@ -220,12 +220,12 @@ namespace CosplayEventBooking.Controllers
         [HttpGet("logs")]
         public async Task<IActionResult> GetAdminLogs()
         {
-            var logs = await _context.AdminLogs
+            var logs = await _db.AdminLogs
                 .Include(l => l.Admin)
                 .OrderByDescending(l => l.Timestamp)
                 .ToListAsync();
 
-            var logDtos = logs.Select(AdminLogDto.FromEntity).ToList();
+            var logDtos = logs.Select(l => AdminLogDto.FromEntity(l)).ToList();
             return Ok(logDtos);
         }
     }
@@ -233,5 +233,10 @@ namespace CosplayEventBooking.Controllers
     public class UpdateUserRoleRequest
     {
         public string Role { get; set; } = null!;
+    }
+
+    public class LockUserRequest
+    {
+        public string? Reason { get; set; }
     }
 }

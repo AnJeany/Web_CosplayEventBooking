@@ -49,6 +49,11 @@ namespace CosplayEventBooking.Controllers
             {
                 EventId = dto.EventId,
                 ServiceProviderId = dto.ServiceProviderId,
+                Name = dto.Name,
+                Size = dto.Size,
+                Contact = dto.Contact,
+                PortfolioLink = dto.PortfolioLink,
+                Type = dto.Type,
                 Status = BoothStatus.Pending
             };
 
@@ -105,6 +110,40 @@ namespace CosplayEventBooking.Controllers
                     ? "Booth đã được duyệt thành công."
                     : "Booth đã bị từ chối."
             });
+        }
+
+        // =====================================================================
+        // GET /api/booths
+        // Lấy danh sách đăng ký booth của sự kiện.
+        // =====================================================================
+        [HttpGet]
+        public async Task<IActionResult> GetBooths([FromQuery] Guid? eventId)
+        {
+            var query = _db.BoothRegistrations.AsQueryable();
+
+            if (eventId.HasValue)
+            {
+                query = query.Where(b => b.EventId == eventId.Value);
+            }
+
+            var booths = await query
+                .OrderByDescending(b => b.CreatedAt)
+                .Select(b => new
+                {
+                    b.Id,
+                    b.EventId,
+                    b.ServiceProviderId,
+                    b.Name,
+                    b.Size,
+                    b.Contact,
+                    b.PortfolioLink,
+                    b.Type,
+                    Status = b.Status.ToString(),
+                    b.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(booths);
         }
     }
 }

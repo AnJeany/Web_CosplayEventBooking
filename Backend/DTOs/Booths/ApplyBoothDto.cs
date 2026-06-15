@@ -8,8 +8,11 @@ namespace CosplayEventBooking.DTOs.Booths
     {
         /// <summary>ID của sự kiện muốn đăng ký booth.</summary>
         public Guid EventId { get; set; }
-
-        /// <summary>ID của người dùng (PTG/MUA) đang nộp đơn.</summary>
         public Guid ServiceProviderId { get; set; }
+        public string Name { get; set; } = null!;
+        public string Size { get; set; } = null!;
+        public string Contact { get; set; } = null!;
+        public string? PortfolioLink { get; set; }
+        public string Type { get; set; } = null!;
     }
 }

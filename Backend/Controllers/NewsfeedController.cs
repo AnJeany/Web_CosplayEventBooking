@@ -64,7 +64,7 @@ namespace CosplayEventBooking.Controllers
                 {
                     p.Id,
                     p.EventId,
-                    Author = new { p.Author.Id, p.Author.FullName },
+                    Author = new { p.Author.Id, p.Author.FullName, Role = p.Author.Role.ToString(), p.Author.AvatarUrl },
                     p.Content,
                     p.ImageUrl,
                     LikeCount = p.Likes.Count,

@@ -1,10 +1,10 @@
+using System.Text;
+using System.Text.Json.Serialization;
 using CosplayEventBooking.Data;
 using CosplayEventBooking.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +35,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Đăng ký dịch vụ Authorization để kích hoạt phân quyền bằng Attribute [Authorize]
+builder.Services.AddAuthorization();
+
 // Cấu hình JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
@@ -44,8 +47,10 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(options =>
 {
     var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
     var secretKey = jwtSettings.GetValue<string>("Secret") ?? throw new InvalidOperationException("JWT Secret is not configured.");
-    
+
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -73,6 +78,23 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+
+// ===== Seed Dữ liệu mẫu =====
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var passwordHasher = services.GetRequiredService<PasswordHasher>();
+        DbSeeder.Seed(context, passwordHasher);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Đã xảy ra lỗi khi seed dữ liệu.");
+    }
+}
 
 // ===== Middleware Pipeline =====
 

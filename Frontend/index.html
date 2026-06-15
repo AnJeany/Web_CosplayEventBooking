@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CosBook - Nền tảng Quản lý Sự kiện & Booking Cosplay</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            500: '#ec4899', // Pink
+                            600: '#db2777',
+                            700: '#be185d',
+                        },
+                        accent: {
+                            500: '#8b5cf6', // Purple
+                            600: '#7c3aed',
+                        },
+                        darkBg: '#090d16',
+                        darkCard: '#111827',
+                        darkBorder: '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            color: #f3f4f6;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ec4899;
+        }
+    </style>
+    <!-- App Coordinator Module -->
+    <script type="module" src="js/app.js"></script>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-brand-500 selection:text-white overflow-x-hidden">
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- LOGIN / REGISTER VIEW -->
+    <div id="auth-view" class="fixed inset-0 z-50 bg-[#090d16] flex items-center justify-center p-4 overflow-y-auto hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="mx-auto h-12 w-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-accent-500 flex items-center justify-center font-bold text-2xl text-white shadow-lg shadow-brand-500/20">
+                    C
+                </div>
+                <h2 class="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-accent-500">Chào mừng tới CosBook</h2>
+                <p class="text-xs text-slate-400">Nền tảng quản lý sự kiện và đặt lịch cosplay chuyên nghiệp</p>
+            </div>
+
+            <!-- Auth Forms -->
+            <div class="space-y-4">
+                <div class="flex border-b border-slate-800" id="auth-tabs">
+                    <button onclick="toggleAuthTab('login')" id="btn-tab-login" class="flex-1 pb-3 text-sm font-semibold border-b-2 border-brand-500 text-brand-400">Đăng Nhập</button>
+                    <button onclick="toggleAuthTab('register')" id="btn-tab-register" class="flex-1 pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-white">Đăng Ký</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Email</label>
+                        <input type="email" id="login-email" required placeholder="nhapemail@example.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Mật khẩu</label>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-lg shadow-brand-500/20">
+                        Đăng Nhập
+                    </button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Họ và Tên</label>
+                        <input type="text" id="register-name" required placeholder="Nguyễn Văn A" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Email</label>
+                        <input type="email" id="register-email" required placeholder="nhapemail@example.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Mật khẩu</label>
+                        <input type="password" id="register-password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Vai Trò</label>
+                        <select id="register-role" class="w-full bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-brand-500">
+                            <option value="Customer">👤 Khách Tham Dự (Customer)</option>
+                            <option value="ServiceProvider">📸 Dịch Vụ (PTG / MUA)</option>
+                            <option value="EventOrganizer">🎪 Ban Tổ Chức (EventOrganizer)</option>
+                        </select>
+                        <span class="text-[10px] text-slate-500 mt-1 block">Lưu ý: Vai trò Dịch vụ và Ban tổ chức mặc định cần phê duyệt.</span>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-lg shadow-brand-500/20">
+                        Đăng Ký Tài Khoản
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quick Demo Login Switcher -->
+            <div class="border-t border-slate-800 pt-4 space-y-3">
+                <div class="flex items-center gap-1.5 text-xs text-slate-400 font-bold uppercase">
+                    <span>⚡ Đăng nhập nhanh Demo</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="quickLogin('customer')" class="px-2 py-2 text-[11px] font-medium bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition-colors text-left flex flex-col">
+                        <span>👤 Khách tham dự</span>
+                        <span class="text-[9px] text-slate-400">customer@cosbook.com</span>
+                    </button>
+                    <button onclick="quickLogin('service')" class="px-2 py-2 text-[11px] font-medium bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition-colors text-left flex flex-col">
+                        <span>📸 Thợ Ảnh / MakeUp</span>
+                        <span class="text-[9px] text-slate-400">service@cosbook.com</span>
+                    </button>
+                    <button onclick="quickLogin('organizer')" class="px-2 py-2 text-[11px] font-medium bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition-colors text-left flex flex-col">
+                        <span>🎪 Ban Tổ Chức</span>
+                        <span class="text-[9px] text-slate-400">organizer@cosbook.com</span>
+                    </button>
+                    <button onclick="quickLogin('admin')" class="px-2 py-2 text-[11px] font-medium bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition-colors text-left flex flex-col">
+                        <span>⚙️ Admin Tổng</span>
+                        <span class="text-[9px] text-slate-400">admin@cosbook.com</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD VIEW -->
+    <div id="main-view" class="flex-1 flex flex-col">
+        <!-- ROLE SWITCHER FLOATING PANEL -->
+        <div id="floating-role-switcher" class="fixed bottom-6 left-6 z-40 bg-slate-900/90 backdrop-blur-md border border-slate-800 p-4 rounded-2xl shadow-2xl max-w-xs transition-all duration-300 hover:border-brand-500">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="flex h-3 w-3 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
+                </span>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Trình Demo Vai Trò</h4>
+            </div>
+            <p class="text-xs text-slate-400 mb-3">Bấm nút để đổi nhanh tài khoản trải nghiệm luồng tính năng thực tế ở Backend.</p>
+            <div class="grid grid-cols-1 gap-2">
+                <button onclick="quickLogin('customer')" id="btn-role-customer" class="w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    <span>👤 Khách Tham Dự (User)</span>
+                    <span class="hidden bg-white/20 text-[10px] px-1.5 py-0.5 rounded text-white">Active</span>
+                </button>
+                <button onclick="quickLogin('service')" id="btn-role-service" class="w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    <span>📸 Dịch Vụ (PTG / MUA)</span>
+                    <span class="hidden bg-white/20 text-[10px] px-1.5 py-0.5 rounded text-white">Active</span>
+                </button>
+                <button onclick="quickLogin('organizer')" id="btn-role-organizer" class="w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    <span>🎪 Ban Tổ Chức (BTC)</span>
+                    <span class="hidden bg-white/20 text-[10px] px-1.5 py-0.5 rounded text-white">Active</span>
+                </button>
+                <button onclick="quickLogin('admin')" id="btn-role-admin" class="w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    <span>⚙️ Admin Tổng</span>
+                    <span class="hidden bg-white/20 text-[10px] px-1.5 py-0.5 rounded text-white">Active</span>
+                </button>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center">
+                <span class="text-[10px] text-slate-500">Đồ án: Quản lý sự kiện Cosplay</span>
+                <button onclick="openAdminModal()" class="text-[10px] text-brand-400 hover:underline">Trang Admin Tổng ⚙️</button>
+            </div>
+        </div>
+
+        <!-- MAIN NAVBAR -->
+        <nav class="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-4 py-3">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <!-- Logo -->
+                <a href="#" onclick="goHome()" class="flex items-center gap-2">
+                    <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-500 to-accent-500 flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-brand-500/20">
+                        C
+                    </div>
+                    <div class="leading-none">
+                        <span class="font-extrabold text-lg bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-accent-500">CosBook</span>
+                        <span class="block text-[9px] text-slate-400 font-medium uppercase tracking-wider">Event & Booking</span>
+                    </div>
+                </a>
+
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center gap-6">
+                    <button onclick="goHome()" class="text-sm font-semibold hover:text-brand-500 transition-colors flex items-center gap-1 text-brand-500" id="nav-btn-events">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        Sự Kiện
+                    </button>
+                    <button onclick="openChatHistory()" class="text-sm font-semibold hover:text-brand-500 text-slate-300 transition-colors flex items-center gap-1" id="nav-btn-chat">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        Tin Nhắn
+                    </button>
+                    <span class="h-4 w-px bg-slate-800"></span>
+                    <span class="text-xs text-slate-400 flex items-center gap-1 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800">
+                        Vai trò: <strong id="nav-role-badge" class="text-brand-400 uppercase">Khách tham dự</strong>
+                    </span>
+                </div>
+
+                <!-- Profile & Actions -->
+                <div class="flex items-center gap-3">
+                    <button onclick="openMyTickets()" class="relative p-2 text-slate-400 hover:text-white bg-slate-900 rounded-xl border border-slate-800 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                        <span id="nav-ticket-count" class="absolute -top-1 -right-1 bg-brand-500 text-[10px] text-white font-bold h-4 w-4 rounded-full flex items-center justify-center">0</span>
+                    </button>
+                    
+                    <div class="flex items-center gap-2 bg-slate-900 pl-2 pr-3 py-1.5 rounded-full border border-slate-800 cursor-pointer group" onclick="toggleProfileDropdown()">
+                        <img id="nav-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avatar" class="w-6 h-6 rounded-full object-cover ring-2 ring-brand-500">
+                        <span id="nav-username" class="text-xs font-semibold text-slate-200">Aria Cosplay</span>
+                        <div class="relative">
+                            <!-- Simple dropdown menu -->
+                            <div id="profile-dropdown" class="absolute right-0 top-8 bg-slate-950 border border-slate-850 rounded-xl py-2 w-32 shadow-2xl hidden z-50">
+                                <button onclick="handleLogout()" class="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-slate-900 font-semibold transition-colors">
+                                    🚪 Đăng Xuất
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- MAIN BODY CONTENT CONTAINER -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:py-8">
+            <div id="app-view">
+                <!-- DYNAMIC VIEW RENDERED HERE -->
+            </div>
+        </main>
+    </div>
+
+    <!-- CHAT BOX PANEL (MODAL SIMULATION) -->
+    <div id="chat-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl flex flex-col h-[500px] overflow-hidden">
+            <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img id="chat-recipient-avatar" src="" alt="avatar" class="w-10 h-10 rounded-full object-cover border-2 border-brand-500">
+                    <div>
+                        <h4 id="chat-recipient-name" class="font-bold text-sm text-slate-100">---</h4>
+                        <span id="chat-recipient-role" class="text-[10px] text-brand-400 uppercase font-medium">PTG / MUA</span>
+                    </div>
+                </div>
+                <button onclick="closeChat()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-950/30">
+                <!-- Chat Bubbles rendered here -->
+            </div>
+
+            <div class="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-2">
+                <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-slate-950 text-slate-100 placeholder-slate-500 border border-slate-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-brand-500">
+                <button onclick="sendMessage()" class="bg-brand-500 hover:bg-brand-600 text-white p-2.5 rounded-xl transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOKING CONFIG MODAL -->
+    <div id="booking-config-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden p-6 space-y-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-100">Cấu hình lịch đặt dịch vụ</h3>
+                <button onclick="closeBookingConfigModal()" class="text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Ngày đặt</label>
+                    <input type="date" id="booking-date" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Giờ Bắt Đầu (Format: HH:mm)</label>
+                        <input type="time" id="booking-start-time" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Giờ Kết Thúc (Format: HH:mm)</label>
+                        <input type="time" id="booking-end-time" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Phong cách Cosplay / Custom Note</label>
+                    <input type="text" id="booking-style" placeholder="Ví dụ: Cosplay đơn - Klee (Genshin Impact)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                </div>
+                <button onclick="submitBookingConfig()" class="w-full bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-lg shadow-brand-500/20">
+                    Tiếp Tục Thanh Toán
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOKING SERVICE / TICKET PAYMENT MODAL (DEMO MODE) -->
+    <div id="payment-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transition-all duration-300">
+            <!-- Warning Header -->
+            <div class="p-3 bg-gradient-to-r from-amber-500/20 to-brand-500/20 border-b border-slate-800 text-center text-xs text-amber-400 font-semibold flex items-center justify-center gap-1.5">
+                <span>⚠️ THANH TOÁN GIẢ LẬP DEMO (Thanh toán phi thương mại)</span>
+            </div>
+
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-slate-100">Cổng Thanh Toán Giả Lập</h3>
+                    <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 mb-6">
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span>Sản phẩm/Dịch vụ:</span>
+                        <span id="pay-item-name" class="font-semibold text-slate-200">---</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span>Đơn vị nhận:</span>
+                        <span id="pay-recipient" class="font-semibold text-slate-200">---</span>
+                    </div>
+                    <hr class="border-slate-800">
+                    <div class="flex justify-between text-sm">
+                        <span class="font-bold text-slate-300">Tổng thanh toán:</span>
+                        <span id="pay-amount" class="font-extrabold text-brand-500 text-base">0đ</span>
+                    </div>
+                </div>
+
+                <!-- QR MOCK -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl mb-6 border border-slate-200 max-w-[200px] mx-auto">
+                    <svg viewBox="0 0 100 100" class="w-28 h-28 text-slate-900">
+                        <path d="M0,0 h30 v30 h-30 z M70,0 h30 v30 h-30 z M0,70 h30 v30 h-30 z" fill="currentColor"/>
+                        <path d="M5,5 h20 v20 h-20 z M75,5 h20 v20 h-20 z M5,75 h20 v20 h-20 z" fill="#fff"/>
+                        <path d="M10,10 h10 v10 h-10 z M80,10 h10 v10 h-10 z M10,80 h10 v10 h-10 z" fill="currentColor"/>
+                        <rect x="40" y="40" width="20" height="20" fill="currentColor"/>
+                        <rect x="35" y="10" width="10" height="15" fill="currentColor"/>
+                        <rect x="10" y="35" width="15" height="10" fill="currentColor"/>
+                        <rect x="80" y="35" width="10" height="25" fill="currentColor"/>
+                        <rect x="35" y="80" width="25" height="10" fill="currentColor"/>
+                        <rect x="60" y="60" width="15" height="15" fill="currentColor"/>
+                    </svg>
+                    <span class="text-[9px] text-slate-500 mt-2 font-mono font-semibold tracking-wider">MÃ QR DEMO</span>
+                </div>
+
+                <div class="text-center text-xs text-slate-400 mb-6">
+                    Mã thanh toán: <span id="pay-code" class="font-mono font-bold text-slate-200">BKCOS_XXXXXX</span>
+                </div>
+
+                <!-- Simulation Buttons -->
+                <div class="space-y-2">
+                    <button id="btn-confirm-payment" onclick="executeDemoPayment()" class="w-full bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all">
+                        <span>✨ Xác nhận thanh toán thành công (Bấm để Demo)</span>
+                    </button>
+                    <button onclick="closePaymentModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-semibold text-xs transition-all">
+                        Huỷ Giao Dịch
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN TICKETS / BOOKINGS PANEL -->
+    <div id="tickets-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    🎟️ Vé & Lịch Đã Đặt của tôi
+                </h3>
+                <button onclick="closeMyTickets()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-4 overflow-y-auto flex-1 space-y-6">
+                <!-- VÉ SỰ KIỆN -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase text-slate-400 mb-2">🎟️ Vé Sự Kiện Đã Đăng Ký</h4>
+                    <div id="user-tickets-list" class="space-y-2">
+                        <!-- Loaded Ticket Item -->
+                    </div>
+                </div>
+
+                <!-- LỊCH BOOK PTG/MUA -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase text-slate-400 mb-2">📸 Lịch Booking Dịch Vụ</h4>
+                    <div id="user-bookings-list" class="space-y-2">
+                        <!-- Loaded Booking Item -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN CONSOLE MODAL -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    ⚙️ Bảng Điều Khiển Admin Tổng (Phê duyệt/Khoá Tài Khoản & Logs)
+                </h3>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Users List -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold uppercase text-slate-400">👤 Danh Sách Tài Khoản</h4>
+                        <div id="admin-users-list" class="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                            <!-- Loaded via API -->
+                        </div>
+                    </div>
+                    <!-- Admin Logs -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold uppercase text-slate-400">📋 Nhật Ký Hoạt Động (Admin Logs)</h4>
+                        <div id="admin-logs-list" class="space-y-2 max-h-[400px] overflow-y-auto pr-1 bg-slate-950/40 p-3 rounded-xl border border-slate-850">
+                            <!-- Loaded via API -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core scripts replaced by app.js module -->
+</body>
+</html>

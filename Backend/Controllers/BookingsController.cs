@@ -181,5 +181,82 @@ namespace CosplayEventBooking.Controllers
                 _ => Array.Empty<string>()
             };
         }
+
+        // =====================================================================
+        // GET /api/bookings
+        // Lấy danh sách booking của khách hàng hoặc nhà cung cấp dịch vụ.
+        // =====================================================================
+        [HttpGet]
+        public async Task<IActionResult> GetBookings(
+            [FromQuery] Guid? customerId = null,
+            [FromQuery] Guid? serviceProviderId = null,
+            [FromQuery] Guid? eventId = null)
+        {
+            var query = _db.Bookings
+                .Include(b => b.Customer)
+                .Include(b => b.ServicePost)
+                    .ThenInclude(sp => sp.ServiceProvider)
+                .Include(b => b.ServicePost)
+                    .ThenInclude(sp => sp.Event)
+                .AsQueryable();
+
+            if (customerId.HasValue)
+            {
+                query = query.Where(b => b.CustomerId == customerId.Value);
+            }
+
+            if (serviceProviderId.HasValue)
+            {
+                query = query.Where(b => b.ServicePost.ServiceProviderId == serviceProviderId.Value);
+            }
+
+            if (eventId.HasValue)
+            {
+                query = query.Where(b => b.ServicePost.EventId == eventId.Value);
+            }
+
+            var bookings = await query
+                .OrderByDescending(b => b.CreatedAt)
+                .Select(b => new
+                {
+                    b.Id,
+                    b.CustomerId,
+                    b.ServicePostId,
+                    b.TimeSlot,
+                    Status = b.Status.ToString(),
+                    b.QrCode,
+                    b.CreatedAt,
+                    Customer = new
+                    {
+                        b.Customer.Id,
+                        b.Customer.FullName,
+                        b.Customer.Email,
+                        b.Customer.AvatarUrl
+                    },
+                    ServicePost = new
+                    {
+                        b.ServicePost.Id,
+                        b.ServicePost.Price,
+                        b.ServicePost.Rules,
+                        ServiceProvider = new
+                        {
+                            b.ServicePost.ServiceProvider.Id,
+                            b.ServicePost.ServiceProvider.FullName,
+                            b.ServicePost.ServiceProvider.Email,
+                            b.ServicePost.ServiceProvider.AvatarUrl,
+                            Role = b.ServicePost.ServiceProvider.Role.ToString()
+                        },
+                        Event = new
+                        {
+                            b.ServicePost.Event.Id,
+                            b.ServicePost.Event.Title,
+                            b.ServicePost.Event.Location
+                        }
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(bookings);
+        }
     }
 }
