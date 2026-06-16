@@ -1,0 +1,38 @@
+Đạt: Core, Phân Quyền & Quản Trị (Nhà thầu nền móng)
+Người này sẽ setup bộ khung chuẩn cho toàn project để 2 người còn lại code theo, đồng thời lo phần bảo mật.
+
+Nhiệm vụ chính:
+
+Setup JWT Authentication: Viết logic tạo Token, mã hóa mật khẩu (BCrypt/PBKDF2), và cấu hình các Attribute [Authorize(Roles = "Admin, BTC")] bảo vệ API.
+
+API User & Profile: Đăng ký, đăng nhập, lấy/sửa thông tin cá nhân (Avatar, Bio).
+
+API Portfolio Tĩnh: Luồng upload file ảnh 25MB và lưu URL vào bảng ProfilePosts.
+
+API Admin: API để Admin xem danh sách user, cấp quyền, xóa user, và khóa tài khoản.
+
+Hoàng: Sự Kiện & Vé (Quản lý luồng chảy)
+Người này sẽ lo mặt tiền của hệ thống, xử lý lượng lớn dữ liệu truy vấn từ người dùng.
+
+Nhiệm vụ chính:
+
+API Event CRUD: Tạo, sửa, xóa, lấy danh sách sự kiện (có phân trang, lọc theo thời gian/địa điểm).
+
+API Mua Vé & Sinh QR: Viết logic kiểm tra số lượng vé còn lại, giới hạn 10 vé/người. Thuật toán sinh chuỗi QR ngẫu nhiên lưu vào DB.
+
+API Demo Thanh Toán: Xây dựng một Endpoint nhận request thanh toán giả lập, trực tiếp đổi trạng thái của vé hoặc Booking thành Paid/Completed.
+
+API Check-in: Dành cho BTC truyền mã QR vào để đổi trạng thái vé sang CheckedIn.
+
+An: Dịch Vụ, Đặt Lịch & Cộng đồng
+Phân hệ này chứa các luồng trạng thái (State Machine) phức tạp nhất, ràng buộc rất chặt chẽ với nhau. Khối lượng API khá nặng nhưng hoàn toàn có thể xử lý trơn tru nhờ kỹ năng thiết kế kiến trúc backend, đặc biệt là tư duy xử lý logic bình luận có tính phân cấp ở các hệ thống mạng xã hội. Hơn nữa, góc nhìn thực chiến từ một tay máy chuyên săn job và chốt lịch với mẫu tại fes sẽ giúp bạn viết các hàm bắt lỗi (validation) chặn trùng slot hay quy định hủy lịch cực kỳ bén và sát thực tế.
+
+Nhiệm vụ chính:
+
+API Booth & Service: Logic nộp form xin mở Booth, API cho BTC duyệt (Approve/Reject). API cấu hình giá và slot dịch vụ (chỉ được tạo khi Booth đã Approved).
+
+API Booking Workflow: API cho khách đặt lịch, và các hàm chuyển đổi trạng thái (Pending -> Paid -> Accepted -> Completed).
+
+API Newsfeed (Dòng thời gian): Lấy danh sách bài viết sự kiện hoặc trang Khám phá. Viết API đăng bài, bình luận, và thả like.
+
+API Messaging: Luồng gửi/nhận tin nhắn trực tiếp giữa 2 UserId theo cơ chế Polling (lấy tin nhắn mới mỗi 5 giây).

@@ -28,15 +28,20 @@ namespace CosplayEventBooking.Services
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // Ánh xạ vai trò (UserRole) trong database sang tên quyền trong token để phù hợp [Authorize(Roles = "Admin, BTC")]
-            string roleClaimValue = user.Role switch
+            string roleClaimValue = "Customer";
+            if (user.Role == UserRole.Admin)
             {
-                UserRole.Admin => "Admin",
-                UserRole.EventOrganizer => "BTC",
-                UserRole.ServiceProvider => "ServiceProvider",
-                UserRole.Customer => "Customer",
-                _ => "Customer"
-            };
+                roleClaimValue = "Admin";
+            }
+            else if (user.IsApproved)
+            {
+                roleClaimValue = user.Role switch
+                {
+                    UserRole.EventOrganizer => "BTC",
+                    UserRole.ServiceProvider => "ServiceProvider",
+                    _ => "Customer"
+                };
+            }
 
             var claims = new[]
             {

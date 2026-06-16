@@ -82,13 +82,9 @@ namespace CosplayEventBooking.Controllers
                 return StatusCode(StatusCodes.Status403Forbidden, new { Message = "Tài khoản của bạn đã bị khóa bởi quản trị viên." });
             }
 
-            // Kiểm tra trạng thái phê duyệt tài khoản
-            if (!user.IsApproved)
-            {
-                return BadRequest(new { Message = "Tài khoản đang chờ duyệt từ quản trị viên." });
-            }
 
             var token = _jwtService.GenerateToken(user);
+
 
             return Ok(new AuthResponse
             {
