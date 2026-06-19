@@ -392,7 +392,7 @@ export async function renderActiveTabContent(ev) {
 
                                 ${post.imageUrl ? `
                                     <div class="rounded-xl overflow-hidden max-h-[300px] border border-slate-800">
-                                        <img src="${post.imageUrl.startsWith('/') ? 'http://localhost:5056' + post.imageUrl : post.imageUrl}" alt="Attached post" class="w-full h-full object-cover">
+                                        <img src="${post.imageUrl.startsWith('/') ? API_BASE.replace('/api', '') + post.imageUrl : post.imageUrl}" alt="Attached post" class="w-full h-full object-cover">
                                     </div>
                                 ` : ''}
 
@@ -717,12 +717,17 @@ export async function uploadExplorePhoto() {
 
         const data = await res.json();
         if (!res.ok) {
-            throw new Error(data.Message || "Không thể tải ảnh lên.");
+            throw new Error(data.message || data.Message || "Không thể tải ảnh lên.");
         }
 
-        document.getElementById("explore-photo-url").value = data.imageUrl;
-        document.getElementById("attached-photo-indicator").classList.remove("hidden");
-        showToast("Tải ảnh portfolio/mẫu lên thành công!", "success");
+        const imgUrl = data.imageUrl || data.ImageUrl;
+        if (imgUrl) {
+            document.getElementById("explore-photo-url").value = imgUrl;
+            document.getElementById("attached-photo-indicator").classList.remove("hidden");
+            showToast("Tải ảnh portfolio/mẫu lên thành công!", "success");
+        } else {
+            throw new Error("Không nhận được đường dẫn ảnh từ phản hồi của máy chủ.");
+        }
     } catch (err) {
         showToast(err.message, "error");
     }
@@ -731,7 +736,11 @@ export async function uploadExplorePhoto() {
 // CREATE EXPLORE COMMUNITY POST
 export async function createExplorePost(eventId) {
     const content = document.getElementById("explore-post-text").value.trim();
-    const imageUrl = document.getElementById("explore-photo-url").value;
+    let imageUrl = document.getElementById("explore-photo-url").value;
+
+    if (imageUrl === "undefined" || imageUrl === "null") {
+        imageUrl = "";
+    }
 
     if (!content) {
         showToast("Vui lòng nhập nội dung bài viết!", "warning");

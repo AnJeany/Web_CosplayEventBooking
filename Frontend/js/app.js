@@ -112,12 +112,13 @@ export function syncNavbarProfile() {
     if (navRoleBadge) navRoleBadge.innerText = roleText;
 
     const adminBtn = document.getElementById("dropdown-admin-btn");
-    if (adminBtn) {
-        if (state.user.role === "Admin") {
-            adminBtn.classList.remove("hidden");
-        } else {
-            adminBtn.classList.add("hidden");
-        }
+    const navAdminBtn = document.getElementById("nav-btn-admin");
+    if (state.user.role === "Admin") {
+        if (adminBtn) adminBtn.classList.remove("hidden");
+        if (navAdminBtn) navAdminBtn.classList.remove("hidden");
+    } else {
+        if (adminBtn) adminBtn.classList.add("hidden");
+        if (navAdminBtn) navAdminBtn.classList.add("hidden");
     }
 
     // Tải thông số vé/lịch đặt góc Navbar

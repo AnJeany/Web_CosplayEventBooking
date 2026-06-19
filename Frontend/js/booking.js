@@ -8,14 +8,29 @@ let selectedServicePost = null;
 export async function loadMyCounts() {
     if (!state.token || !state.user) return;
     try {
-        const tickets = await apiGet(`tickets?customerId=${state.user.id}`);
-        const bookingsAsCustomer = await apiGet(`bookings?customerId=${state.user.id}`);
-        let bookingsAsProvider = [];
-        if (state.user.role === 'ServiceProvider') {
-            bookingsAsProvider = await apiGet(`bookings?serviceProviderId=${state.user.id}`);
+        let ticketCount = 0;
+        try {
+            const tickets = await apiGet(`tickets?customerId=${state.user.id}`);
+            ticketCount = tickets.length;
+        } catch (e) {
+            console.error(e);
         }
+
+        let bookingCount = 0;
+        try {
+            if (state.user.role === 'ServiceProvider') {
+                const bookingsAsProvider = await apiGet(`bookings?serviceProviderId=${state.user.id}`);
+                bookingCount = bookingsAsProvider.length;
+            } else {
+                const bookingsAsCustomer = await apiGet(`bookings?customerId=${state.user.id}`);
+                bookingCount = bookingsAsCustomer.length;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+
         const badge = document.getElementById("nav-ticket-count");
-        if (badge) badge.innerText = tickets.length + bookingsAsCustomer.length + bookingsAsProvider.length;
+        if (badge) badge.innerText = ticketCount + bookingCount;
     } catch (err) {
         console.error(err);
     }
@@ -83,8 +98,6 @@ export async function submitBookingConfig() {
             timeSlot
         });
 
-        closeBookingConfigModal();
-
         pendingTransaction = {
             type: 'booking',
             bookingId: res.id,
@@ -101,6 +114,7 @@ export async function submitBookingConfig() {
         document.getElementById("pay-code").innerText = pendingTransaction.code;
 
         document.getElementById("payment-modal").classList.remove('hidden');
+        closeBookingConfigModal();
     } catch (err) {
         showToast(err.message, "error");
     }
@@ -154,11 +168,16 @@ export async function openMyTickets() {
         let tickets = [];
         let bookings = [];
 
-        if (state.user.role === 'Customer') {
+        try {
             tickets = await apiGet(`tickets?customerId=${state.user.id}`);
-            bookings = await apiGet(`bookings?customerId=${state.user.id}`);
-        } else {
+        } catch (e) {
+            console.error("Failed to load tickets:", e);
+        }
+
+        if (state.user.role === 'ServiceProvider') {
             bookings = await apiGet(`bookings?serviceProviderId=${state.user.id}`);
+        } else {
+            bookings = await apiGet(`bookings?customerId=${state.user.id}`);
         }
 
         listTickets.innerHTML = tickets.length > 0 ? tickets.map(t => `
