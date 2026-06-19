@@ -404,6 +404,72 @@
         </div>
     </div>
 
+    <!-- CREATE EVENT MODAL -->
+    <div id="create-event-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden p-6 space-y-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    📅 Tạo Sự Kiện Cosplay Mới
+                </h3>
+                <button onclick="closeCreateEventModal()" class="text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form id="create-event-form" onsubmit="submitCreateEvent(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Tên sự kiện / Lễ hội</label>
+                    <input type="text" id="event-title" required placeholder="Ví dụ: Cosplay Halloween Festa 2026" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Mô tả chi tiết hoạt động</label>
+                    <textarea id="event-desc" required placeholder="Nhập lịch trình, khách mời, các hoạt động chính..." rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Thời gian bắt đầu</label>
+                        <input type="datetime-local" id="event-start" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Thời gian kết thúc</label>
+                        <input type="datetime-local" id="event-end" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Địa điểm tổ chức</label>
+                    <input type="text" id="event-location" required placeholder="Ví dụ: Nhà thi đấu Phú Thọ, Quận 11, TP. HCM" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Giá vé tham dự (VNĐ - 0 nếu Free)</label>
+                        <input type="number" id="event-price" required min="0" value="0" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Sức chứa tối đa (Số lượng vé)</label>
+                        <input type="number" id="event-total-tickets" required min="10" value="500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Mở khu vực Booth Dịch Vụ?</label>
+                        <select id="event-has-booth" class="w-full bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-brand-500">
+                            <option value="true">Có hỗ trợ (Cho thợ đăng ký)</option>
+                            <option value="false">Không hỗ trợ (Chỉ tham gia tự do)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">URL ảnh Banner sự kiện</label>
+                        <input type="text" id="event-banner" placeholder="Link ảnh hoặc bỏ trống" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-lg shadow-brand-500/20">
+                    🚀 Phát Hành Sự Kiện Mới
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Core scripts replaced by app.js module -->
 </body>
 </html>

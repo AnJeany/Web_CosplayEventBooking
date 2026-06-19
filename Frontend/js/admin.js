@@ -22,7 +22,7 @@ export async function openAdminModal() {
         userList.innerHTML = users.map(u => `
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-850 flex items-center justify-between text-xs">
                 <div>
-                    <p class="font-bold text-slate-200">${u.fullName} <code class="text-[9px] text-brand-400 bg-slate-900 px-1 rounded">${u.role}</code></p>
+                    <p class="font-bold text-slate-200">${u.fullName} <code class="text-[9px] text-brand-400 bg-slate-900 px-1 rounded">${u.realRole || u.role}</code></p>
                     <p class="text-[10px] text-slate-500">${u.email}</p>
                     <p class="text-[9px] text-slate-400">Trạng thái: 
                         <span class="${u.isApproved ? 'text-emerald-400' : 'text-amber-400'} font-semibold">${u.isApproved ? 'Đã duyệt' : 'Chờ duyệt'}</span> | 
@@ -30,7 +30,7 @@ export async function openAdminModal() {
                     </p>
                 </div>
                 <div class="flex flex-col gap-1 shrink-0 ml-2">
-                    ${!u.isApproved ? `<button onclick="approveUserByAdmin('${u.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[9px] px-2 py-0.5 rounded">Duyệt</button>` : ''}
+                    ${(!u.isApproved && (u.realRole === 'ServiceProvider' || u.realRole === 'EventOrganizer')) ? `<button onclick="approveUserByAdmin('${u.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[9px] px-2 py-0.5 rounded">Duyệt</button>` : ''}
                     ${!u.isLocked ? `<button onclick="lockUserByAdmin('${u.id}', true)" class="bg-red-650 hover:bg-red-700 text-white font-bold text-[9px] px-2 py-0.5 rounded">Khoá</button>` : `<button onclick="lockUserByAdmin('${u.id}', false)" class="bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-[9px] px-2 py-0.5 rounded">Mở Khoá</button>`}
                 </div>
             </div>

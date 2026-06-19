@@ -5,7 +5,7 @@ import { toggleAuthTab, handleLogin, handleRegister, handleLogout } from './auth
 import { openChatWith, pollNewMessages, renderChatMessages, handleChatKeyPress, sendMessage, closeChat, openChatHistory } from './chat.js';
 import { openAdminModal, approveUserByAdmin, lockUserByAdmin, closeAdminModal } from './admin.js';
 import { loadMyCounts, triggerTicketPurchase, triggerServiceBooking, closeBookingConfigModal, submitBookingConfig, closePaymentModal, executeDemoPayment, openMyTickets, reviewBookingStatus, closeMyTickets } from './booking.js';
-import { loadEvents, renderApp, goHome, renderHomepage, viewEventDetail, viewHotEvent, renderEventDetailPage, switchEventTab, renderActiveTabContent, createBtcPost, uploadExplorePhoto, createExplorePost, likePost, reportPost, loadCommentsForPost, submitComment, focusCommentInput, submitBoothApplication, submitServiceConfig, approveBooth } from './events.js';
+import { loadEvents, renderApp, goHome, renderHomepage, viewEventDetail, viewHotEvent, renderEventDetailPage, switchEventTab, renderActiveTabContent, createBtcPost, uploadExplorePhoto, createExplorePost, likePost, reportPost, loadCommentsForPost, submitComment, focusCommentInput, submitBoothApplication, submitServiceConfig, approveBooth, openCreateEventModal, closeCreateEventModal, submitCreateEvent } from './events.js';
 
 // Gắn toàn bộ hàm nghiệp vụ lên đối tượng window để HTML có thể gọi inline
 window.state = state;
@@ -61,6 +61,9 @@ window.focusCommentInput = focusCommentInput;
 window.submitBoothApplication = submitBoothApplication;
 window.submitServiceConfig = submitServiceConfig;
 window.approveBooth = approveBooth;
+window.openCreateEventModal = openCreateEventModal;
+window.closeCreateEventModal = closeCreateEventModal;
+window.submitCreateEvent = submitCreateEvent;
 
 // Dispatcher phục vụ refresh tab khi có giao dịch thành công từ modal booking/thanh toán
 window.dispatcher = {
@@ -132,10 +135,24 @@ export function toggleProfileDropdown() {
     if (dropdown) dropdown.classList.toggle("hidden");
 }
 
+export function toggleRoleSwitcher() {
+    const content = document.getElementById("role-switcher-content");
+    const icon = document.getElementById("role-switcher-toggle-icon");
+    if (content) {
+        content.classList.toggle("hidden");
+        if (content.classList.contains("hidden")) {
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>';
+        } else {
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>';
+        }
+    }
+}
+
 window.initApp = initApp;
 window.syncNavbarProfile = syncNavbarProfile;
 window.startRoleBadgeSync = startRoleBadgeSync;
 window.toggleProfileDropdown = toggleProfileDropdown;
+window.toggleRoleSwitcher = toggleRoleSwitcher;
 
 // Khởi chạy ứng dụng
 if (document.readyState === "loading") {

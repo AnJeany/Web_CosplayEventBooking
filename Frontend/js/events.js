@@ -94,11 +94,16 @@ export function renderHomepage() {
 
         <!-- Event Grid List -->
         <div>
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <h2 class="text-xl font-bold text-slate-100 flex items-center gap-2">
                     <span>📅 Danh sách sự kiện</span>
                     <span class="text-xs bg-brand-500/10 text-brand-400 px-2.5 py-0.5 rounded-full border border-brand-500/20">${filteredEvents.length} sự kiện</span>
                 </h2>
+                ${(state.user && state.user.role === 'EventOrganizer') ? `
+                    <button onclick="openCreateEventModal()" class="bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-500/20 flex items-center gap-1.5 hover:scale-105">
+                        ➕ Tạo Sự Kiện Mới
+                    </button>
+                ` : ''}
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -616,6 +621,7 @@ export async function renderActiveTabContent(ev) {
                                     <th class="px-6 py-4">Phân loại</th>
                                     <th class="px-6 py-4">Kích thước</th>
                                     <th class="px-6 py-4">Liên hệ</th>
+                                    <th class="px-6 py-4">Portfolio Link</th>
                                     <th class="px-6 py-4">Trạng thái</th>
                                     <th class="px-6 py-4 text-right">Hành động</th>
                                 </tr>
@@ -627,6 +633,13 @@ export async function renderActiveTabContent(ev) {
                                         <td class="px-6 py-4 uppercase">${app.type === 'ptg' ? 'Thợ ảnh' : 'Make up'}</td>
                                         <td class="px-6 py-4">${app.size || 'Mặc định'}</td>
                                         <td class="px-6 py-4">${app.contact || 'N/A'}</td>
+                                        <td class="px-6 py-4">
+                                            ${app.portfolioLink ? `
+                                                <a href="${app.portfolioLink}" target="_blank" class="text-brand-400 hover:underline inline-flex items-center gap-1">
+                                                    🌐 Xem Portfolio
+                                                </a>
+                                            ` : '<span class="text-slate-500">Chưa cung cấp</span>'}
+                                        </td>
                                         <td class="px-6 py-4">
                                             <span class="px-2.5 py-1 rounded text-[10px] font-bold ${app.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
                                                 ${app.status === 'Approved' ? 'ĐÃ DUYỆT' : 'CHỜ DUYỆT'}
@@ -882,6 +895,55 @@ export async function approveBooth(boothId) {
         showToast("Đã phê duyệt booth gian hàng cho bên dịch vụ!", "success");
         const ev = state.events.find(e => e.id === state.activeEventId);
         renderActiveTabContent(ev);
+    } catch (err) {
+        showToast(err.message, "error");
+    }
+}
+
+// CREATE EVENT MODAL OPERATIONS
+export function openCreateEventModal() {
+    document.getElementById("create-event-modal").classList.remove("hidden");
+    const now = new Date();
+    const future = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    document.getElementById("event-start").value = now.toISOString().slice(0, 16);
+    document.getElementById("event-end").value = future.toISOString().slice(0, 16);
+}
+
+export function closeCreateEventModal() {
+    document.getElementById("create-event-modal").classList.add("hidden");
+}
+
+export async function submitCreateEvent(e) {
+    e.preventDefault();
+    const title = document.getElementById("event-title").value.trim();
+    const description = document.getElementById("event-desc").value.trim();
+    const startTime = new Date(document.getElementById("event-start").value).toISOString();
+    const endTime = new Date(document.getElementById("event-end").value).toISOString();
+    const location = document.getElementById("event-location").value.trim();
+    const ticketPrice = parseFloat(document.getElementById("event-price").value || 0);
+    const totalTickets = parseInt(document.getElementById("event-total-tickets").value || 100);
+    const hasBooth = document.getElementById("event-has-booth").value === "true";
+    const bannerUrl = document.getElementById("event-banner").value.trim() || null;
+
+    try {
+        await apiPost("events", {
+            organizerId: state.user.id,
+            title,
+            description,
+            startTime,
+            endTime,
+            location,
+            ticketPrice,
+            totalTickets,
+            hasBooth,
+            bannerUrl
+        });
+
+        showToast("Tạo sự kiện mới thành công!", "success");
+        closeCreateEventModal();
+        document.getElementById("create-event-form").reset();
+        await loadEvents();
     } catch (err) {
         showToast(err.message, "error");
     }
