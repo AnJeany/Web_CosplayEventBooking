@@ -3,9 +3,12 @@ using CosplayEventBooking.DTOs.Posts;
 using CosplayEventBooking.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CosplayEventBooking.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/posts")]
     public class PostsController : ControllerBase
@@ -24,6 +27,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || (userId != dto.AuthorId && !User.IsInRole("Admin")))
+            {
+                return Forbid();
+            }
+
             // Kiểm tra author tồn tại
             var authorExists = await _db.Users.AnyAsync(u => u.Id == dto.AuthorId);
             if (!authorExists)
@@ -68,6 +77,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPost("{postId:guid}/comments")]
         public async Task<IActionResult> AddComment(Guid postId, [FromBody] CreateCommentDto dto)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || (userId != dto.UserId && !User.IsInRole("Admin")))
+            {
+                return Forbid();
+            }
+
             // Kiểm tra bài viết tồn tại
             var postExists = await _db.CommunityPosts.AnyAsync(p => p.Id == postId);
             if (!postExists)
@@ -123,6 +138,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPost("{postId:guid}/like")]
         public async Task<IActionResult> ToggleLike(Guid postId, [FromQuery] Guid userId)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var currentUserId) || currentUserId != userId)
+            {
+                return Forbid();
+            }
+
             // Kiểm tra bài viết tồn tại
             var postExists = await _db.CommunityPosts.AnyAsync(p => p.Id == postId);
             if (!postExists)

@@ -2,9 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CosplayEventBooking.Data;
 using CosplayEventBooking.Entities;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CosplayEventBooking.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TicketsController : ControllerBase
@@ -20,6 +23,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPost("purchase")]
         public async Task<ActionResult<IEnumerable<Ticket>>> PurchaseTickets(PurchaseTicketDto dto)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || (userId != dto.CustomerId && !User.IsInRole("Admin")))
+            {
+                return Forbid();
+            }
+
             if (dto.Quantity <= 0 || dto.Quantity > 10)
             {
                 return BadRequest("Quantity must be between 1 and 10.");
@@ -69,7 +78,17 @@ namespace CosplayEventBooking.Controllers
             _context.Tickets.AddRange(newTickets);
             await _context.SaveChangesAsync();
 
-            return Ok(newTickets);
+            var response = newTickets.Select(t => new
+            {
+                t.Id,
+                t.CustomerId,
+                t.EventId,
+                t.QrCode,
+                Status = t.Status.ToString(),
+                t.CreatedAt
+            });
+
+            return Ok(response);
         }
 
         // POST: api/tickets/checkin
@@ -81,11 +100,32 @@ namespace CosplayEventBooking.Controllers
                 return BadRequest("QR Code is required.");
             }
 
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.QrCode == dto.QrCode);
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            var ticket = await _context.Tickets
+                .Include(t => t.Event)
+                .FirstOrDefaultAsync(t => t.QrCode == dto.QrCode);
 
             if (ticket == null)
             {
                 return NotFound("Invalid QR Code.");
+            }
+
+            // Check permission: Only BTC of the event, or Admin can check in
+            if (userRole == "BTC")
+            {
+                if (ticket.Event.OrganizerId != userId)
+                {
+                    return Forbid();
+                }
+            }
+            else if (userRole != "Admin")
+            {
+                return Forbid();
             }
 
             if (ticket.Status == TicketStatus.CheckedIn)
@@ -106,6 +146,21 @@ namespace CosplayEventBooking.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTickets([FromQuery] Guid? customerId)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (userRole == "Customer")
+            {
+                customerId = userId;
+            }
+            else if (customerId.HasValue && customerId.Value != userId && userRole != "Admin" && userRole != "BTC")
+            {
+                return Forbid();
+            }
+
             var query = _context.Tickets
                 .Include(t => t.Event)
                 .Include(t => t.Customer)

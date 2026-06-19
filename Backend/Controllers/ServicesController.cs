@@ -3,9 +3,12 @@ using CosplayEventBooking.DTOs.Services;
 using CosplayEventBooking.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CosplayEventBooking.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/services")]
     public class ServicesController : ControllerBase
@@ -25,6 +28,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPost("config")]
         public async Task<IActionResult> ConfigService([FromBody] ConfigServiceDto dto)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || userId != dto.ServiceProviderId || !User.IsInRole("ServiceProvider"))
+            {
+                return Forbid();
+            }
+
             // === Business Rule: Kiểm tra booth phải ở trạng thái Approved ===
             var approvedBooth = await _db.BoothRegistrations
                 .FirstOrDefaultAsync(br =>
@@ -75,6 +84,7 @@ namespace CosplayEventBooking.Controllers
         // GET /api/services
         // Lấy danh sách dịch vụ (ServicePost) tại sự kiện (hỗ trợ query eventId).
         // =====================================================================
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetServices([FromQuery] Guid? eventId)
         {

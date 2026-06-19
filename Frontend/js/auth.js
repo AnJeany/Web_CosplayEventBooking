@@ -51,7 +51,9 @@ export async function handleRegister(e) {
     const fullName = document.getElementById("register-name").value;
     const email = document.getElementById("register-email").value;
     const password = document.getElementById("register-password").value;
-    const role = document.getElementById("register-role").value;
+    
+    const roleInput = document.querySelector('input[name="register-role"]:checked');
+    const role = roleInput ? roleInput.value : "Customer";
 
     try {
         const res = await fetch(`${API_BASE}/auth/register`, {
@@ -80,38 +82,4 @@ export async function handleRegister(e) {
 export function handleLogout() {
     clearAuth();
     window.location.reload();
-}
-
-export async function quickLogin(roleName) {
-    let email = "customer@cosbook.com";
-    if (roleName === "service") email = "service@cosbook.com";
-    if (roleName === "organizer") email = "organizer@cosbook.com";
-    if (roleName === "admin") email = "admin@cosbook.com";
-
-    try {
-        const res = await fetch(`${API_BASE}/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password: "Password123!" })
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-            throw new Error(data.message || "Không thể thực hiện đăng nhập nhanh.");
-        }
-
-        saveAuth(data.token, data.user);
-        showToast(`Đã đổi sang tài khoản: ${data.user.fullName}`, "success");
-        
-        if (state.activeEventId) {
-            localStorage.setItem("activeEventId", state.activeEventId);
-            localStorage.setItem("activeTab", (data.user.role === 'EventOrganizer') ? 'manage' : 'timeline');
-        } else {
-            localStorage.removeItem("activeEventId");
-            localStorage.removeItem("activeTab");
-        }
-        window.location.reload();
-    } catch (err) {
-        showToast(err.message, "error");
-    }
 }

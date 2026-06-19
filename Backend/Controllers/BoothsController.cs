@@ -3,9 +3,12 @@ using CosplayEventBooking.DTOs.Booths;
 using CosplayEventBooking.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CosplayEventBooking.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/booths")]
     public class BoothsController : ControllerBase
@@ -24,6 +27,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPost("apply")]
         public async Task<IActionResult> Apply([FromBody] ApplyBoothDto dto)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || userId != dto.ServiceProviderId)
+            {
+                return Forbid();
+            }
+
             // Kiểm tra sự kiện có tồn tại và có hỗ trợ booth không
             var eventExists = await _db.Events
                 .AnyAsync(e => e.Id == dto.EventId && e.HasBooth);
@@ -77,6 +86,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPut("{boothId:guid}/review")]
         public async Task<IActionResult> Review(Guid boothId, [FromBody] ReviewBoothDto dto)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || (dto.ReviewerId != userId && !User.IsInRole("Admin")))
+            {
+                return Forbid();
+            }
+
             // Validate: Nếu Reject thì phải có RejectReason
             if (dto.Decision == "Reject" && string.IsNullOrWhiteSpace(dto.RejectReason))
                 return BadRequest(new { message = "Phải cung cấp lý do từ chối (RejectReason) khi Decision = 'Reject'." });

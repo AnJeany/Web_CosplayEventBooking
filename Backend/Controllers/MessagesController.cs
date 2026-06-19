@@ -3,9 +3,12 @@ using CosplayEventBooking.DTOs.Messages;
 using CosplayEventBooking.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CosplayEventBooking.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/messages")]
     public class MessagesController : ControllerBase
@@ -25,6 +28,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPost]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageDto dto)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || (userId != dto.SenderId && !User.IsInRole("Admin")))
+            {
+                return Forbid();
+            }
+
             // Kiểm tra sender và receiver không phải cùng người
             if (dto.SenderId == dto.ReceiverId)
                 return BadRequest(new { message = "Không thể tự gửi tin nhắn cho chính mình." });
@@ -80,12 +89,22 @@ namespace CosplayEventBooking.Controllers
             [FromQuery] Guid? lastMessageId = null,
             [FromQuery] DateTime? lastTimestamp = null)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
             // Parse conversationId thành 2 UserId
             var userIds = ParseConversationId(conversationId);
             if (userIds == null)
                 return BadRequest(new { message = "ConversationId không hợp lệ. Format phải là '{userId1}_{userId2}'." });
 
             var (userId1, userId2) = userIds.Value;
+
+            // The logged-in user must be either userId1 or userId2, or an Admin
+            if (userId != userId1 && userId != userId2 && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
 
             // Base query: tin nhắn giữa 2 người này (cả 2 chiều)
             var query = _db.Messages

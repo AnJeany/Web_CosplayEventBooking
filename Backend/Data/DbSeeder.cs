@@ -197,7 +197,7 @@ namespace CosplayEventBooking.Data
             // 4. Khởi tạo cấu hình Dịch vụ (ServicePost) mẫu
             var servicePost1 = new ServicePost
             {
-                Id = Guid.Parse("s1111111-1111-1111-1111-111111111111"),
+                Id = Guid.Parse("f1111111-1111-1111-1111-111111111111"),
                 ServiceProviderId = providerId,
                 EventId = event1Id,
                 Price = 350000,
@@ -211,7 +211,7 @@ namespace CosplayEventBooking.Data
             // 5. Khởi tạo Bài viết Newsfeed (Timeline của BTC & Khám phá của Cộng đồng)
             var post1 = new CommunityPost
             {
-                Id = Guid.Parse("p1111111-1111-1111-1111-111111111111"),
+                Id = Guid.Parse("d1111111-1111-1111-1111-111111111111"),
                 AuthorId = organizerId,
                 EventId = event1Id,
                 Content = "🔥 BẬT MÍ KHÁCH MỜI GUEST STAR HẠNG A!\nHân hạnh chào đón cosplayer HIKARI đến từ Nhật Bản sẽ trực tiếp làm ban giám khảo chấm thi Runway năm nay. Link mua vé tham dự có sẵn ở mục Mua Vé!",
@@ -220,7 +220,7 @@ namespace CosplayEventBooking.Data
 
             var post2 = new CommunityPost
             {
-                Id = Guid.Parse("p2222222-2222-2222-2222-222222222222"),
+                Id = Guid.Parse("d2222222-2222-2222-2222-222222222222"),
                 AuthorId = customerId,
                 EventId = event1Id,
                 Content = "Mọi người ơi, đã ai lên đồ cosplay chuẩn bị cho Festa tháng 7 chưa ạ? Em đang cosplay bé Klee xinh xắn cực kì cần 1 thợ nháy dắt đi chụp đây ạ! 📸✨",
@@ -230,7 +230,7 @@ namespace CosplayEventBooking.Data
 
             var post3 = new CommunityPost
             {
-                Id = Guid.Parse("p3333333-3333-3333-3333-333333333333"),
+                Id = Guid.Parse("d3333333-3333-3333-3333-333333333333"),
                 AuthorId = providerId,
                 EventId = event1Id,
                 Content = "Show nhẹ một vài ảnh chụp đợt Festival năm ngoái ạ. Nhận chụp cosplay solo, couple, nhóm. Thiết bị chuyên nghiệp, có đèn rọi xịn sò. Chỉ nhận 5 slots booking cho sự kiện sắp tới!",

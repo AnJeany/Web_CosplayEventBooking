@@ -1,7 +1,7 @@
 import { state, saveAuth, clearAuth } from './state.js';
 import { showToast } from './toast.js';
 import { API_BASE, apiGet, apiPost, apiPut } from './api.js';
-import { toggleAuthTab, handleLogin, handleRegister, handleLogout, quickLogin } from './auth.js';
+import { toggleAuthTab, handleLogin, handleRegister, handleLogout } from './auth.js';
 import { openChatWith, pollNewMessages, renderChatMessages, handleChatKeyPress, sendMessage, closeChat, openChatHistory } from './chat.js';
 import { openAdminModal, approveUserByAdmin, lockUserByAdmin, closeAdminModal } from './admin.js';
 import { loadMyCounts, triggerTicketPurchase, triggerServiceBooking, closeBookingConfigModal, submitBookingConfig, closePaymentModal, executeDemoPayment, openMyTickets, reviewBookingStatus, closeMyTickets } from './booking.js';
@@ -20,7 +20,6 @@ window.toggleAuthTab = toggleAuthTab;
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
 window.handleLogout = handleLogout;
-window.quickLogin = quickLogin;
 window.openChatWith = openChatWith;
 window.pollNewMessages = pollNewMessages;
 window.renderChatMessages = renderChatMessages;
@@ -109,26 +108,14 @@ export function syncNavbarProfile() {
     if (state.user.role === "Admin") roleText = "Admin Tổng";
     if (navRoleBadge) navRoleBadge.innerText = roleText;
 
-    // Cập nhật trạng thái active của thanh chọn vai trò Demo floating panel
-    ['customer', 'service', 'organizer', 'admin'].forEach(r => {
-        const btn = document.getElementById(`btn-role-${r}`);
-        if (!btn) return;
-        
-        let isMatch = false;
-        if (r === 'customer' && state.user.role === 'Customer') isMatch = true;
-        if (r === 'service' && state.user.role === 'ServiceProvider') isMatch = true;
-        if (r === 'organizer' && state.user.role === 'EventOrganizer') isMatch = true;
-        if (r === 'admin' && state.user.role === 'Admin') isMatch = true;
-
-        const badge = btn.querySelector('span:last-child');
-        if (isMatch) {
-            btn.className = "w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-brand-500 text-white";
-            if (badge) badge.classList.remove('hidden');
+    const adminBtn = document.getElementById("dropdown-admin-btn");
+    if (adminBtn) {
+        if (state.user.role === "Admin") {
+            adminBtn.classList.remove("hidden");
         } else {
-            btn.className = "w-full text-left px-3 py-2 text-xs rounded-lg flex items-center justify-between font-medium transition-all bg-slate-800 text-slate-300 hover:bg-slate-700";
-            if (badge) badge.classList.add('hidden');
+            adminBtn.classList.add("hidden");
         }
-    });
+    }
 
     // Tải thông số vé/lịch đặt góc Navbar
     loadMyCounts();

@@ -2,9 +2,12 @@ using CosplayEventBooking.Data;
 using CosplayEventBooking.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CosplayEventBooking.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/events")]
     public class EventsController : ControllerBase
@@ -17,6 +20,7 @@ namespace CosplayEventBooking.Controllers
         }
 
         // GET: api/events
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Event>>> GetEvents(
             [FromQuery] int page = 1, 
@@ -52,6 +56,7 @@ namespace CosplayEventBooking.Controllers
         }
 
         // GET: api/events/{id}
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<Event>> GetEvent(Guid id)
         {
@@ -69,6 +74,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromBody] CreateEventDto dto)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || (userId != dto.OrganizerId && !User.IsInRole("Admin")) || !User.IsInRole("BTC"))
+            {
+                return Forbid();
+            }
+
             var organizer = await _db.Users.FindAsync(dto.OrganizerId);
             if (organizer == null || organizer.Role != UserRole.EventOrganizer)
             {
@@ -102,6 +113,12 @@ namespace CosplayEventBooking.Controllers
             if (@event == null)
             {
                 return NotFound();
+            }
+
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || (@event.OrganizerId != userId && !User.IsInRole("Admin")))
+            {
+                return Forbid();
             }
 
             @event.Title = dto.Title;
@@ -140,6 +157,12 @@ namespace CosplayEventBooking.Controllers
             if (@event == null)
             {
                 return NotFound();
+            }
+
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || (@event.OrganizerId != userId && !User.IsInRole("Admin")))
+            {
+                return Forbid();
             }
 
             _db.Events.Remove(@event);

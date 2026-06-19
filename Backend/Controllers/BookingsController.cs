@@ -3,9 +3,12 @@ using CosplayEventBooking.DTOs.Bookings;
 using CosplayEventBooking.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CosplayEventBooking.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/bookings")]
     public class BookingsController : ControllerBase
@@ -24,6 +27,12 @@ namespace CosplayEventBooking.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBooking([FromBody] CreateBookingDto dto)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId) || (userId != dto.CustomerId && !User.IsInRole("Admin")))
+            {
+                return Forbid();
+            }
+
             // Lấy ServicePost để biết MaxSlots và các booking hiện có
             var servicePost = await _db.ServicePosts
                 .Include(sp => sp.Bookings)
@@ -96,10 +105,42 @@ namespace CosplayEventBooking.Controllers
         [HttpPut("{bookingId:guid}/status")]
         public async Task<IActionResult> UpdateStatus(Guid bookingId, [FromBody] UpdateBookingStatusDto dto)
         {
-            var booking = await _db.Bookings.FindAsync(bookingId);
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            var booking = await _db.Bookings
+                .Include(b => b.ServicePost)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
                 return NotFound(new { message = $"Không tìm thấy booking {bookingId}." });
+
+            // Verify ownership/permissions
+            bool isAuthorized = false;
+            if (userRole == "Admin")
+            {
+                isAuthorized = true;
+            }
+            else if (userRole == "ServiceProvider" && booking.ServicePost.ServiceProviderId == userId)
+            {
+                isAuthorized = true;
+            }
+            else if (userRole == "Customer" && booking.CustomerId == userId)
+            {
+                // Customers can only transition to Cancelled
+                if (dto.NewStatus == BookingStatus.Cancelled)
+                {
+                    isAuthorized = true;
+                }
+            }
+
+            if (!isAuthorized)
+            {
+                return Forbid();
+            }
 
             // Validate state machine transitions hợp lệ
             if (!IsValidTransition(booking.Status, dto.NewStatus))
@@ -192,6 +233,27 @@ namespace CosplayEventBooking.Controllers
             [FromQuery] Guid? serviceProviderId = null,
             [FromQuery] Guid? eventId = null)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (userRole == "Customer")
+            {
+                customerId = userId;
+                serviceProviderId = null;
+            }
+            else if (userRole == "ServiceProvider")
+            {
+                serviceProviderId = userId;
+                customerId = null;
+            }
+            else if (userRole != "Admin" && userRole != "BTC")
+            {
+                return Forbid();
+            }
+
             var query = _db.Bookings
                 .Include(b => b.Customer)
                 .Include(b => b.ServicePost)
