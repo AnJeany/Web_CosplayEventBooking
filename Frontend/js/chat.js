@@ -37,8 +37,8 @@ export async function pollNewMessages() {
     try {
         const data = await apiGet(url);
         if (data.newMessageCount > 0) {
-            state.chats = [...state.chats, ...data.Messages];
-            state.lastMessageId = data.Messages[data.Messages.length - 1].id;
+            state.chats = [...state.chats, ...data.messages];
+            state.lastMessageId = data.messages[data.messages.length - 1].id;
             renderChatMessages();
         }
     } catch (err) {

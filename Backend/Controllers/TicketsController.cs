@@ -152,7 +152,7 @@ namespace CosplayEventBooking.Controllers
 
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            if (userRole == "Customer")
+            if (userRole == "Customer" || userRole == "ServiceProvider")
             {
                 customerId = userId;
             }

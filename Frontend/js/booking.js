@@ -8,16 +8,14 @@ let selectedServicePost = null;
 export async function loadMyCounts() {
     if (!state.token || !state.user) return;
     try {
-        let tickets = [];
-        let bookings = [];
-        if (state.user.role === 'Customer') {
-            tickets = await apiGet(`tickets?customerId=${state.user.id}`);
-            bookings = await apiGet(`bookings?customerId=${state.user.id}`);
-        } else if (state.user.role === 'ServiceProvider') {
-            bookings = await apiGet(`bookings?serviceProviderId=${state.user.id}`);
+        const tickets = await apiGet(`tickets?customerId=${state.user.id}`);
+        const bookingsAsCustomer = await apiGet(`bookings?customerId=${state.user.id}`);
+        let bookingsAsProvider = [];
+        if (state.user.role === 'ServiceProvider') {
+            bookingsAsProvider = await apiGet(`bookings?serviceProviderId=${state.user.id}`);
         }
         const badge = document.getElementById("nav-ticket-count");
-        if (badge) badge.innerText = tickets.length + bookings.length;
+        if (badge) badge.innerText = tickets.length + bookingsAsCustomer.length + bookingsAsProvider.length;
     } catch (err) {
         console.error(err);
     }
@@ -237,4 +235,24 @@ export async function reviewBookingStatus(bookingId, decision) {
 
 export function closeMyTickets() {
     document.getElementById("tickets-modal").classList.add('hidden');
+}
+
+export function payPendingBooking(bookingId, providerName, price) {
+    document.getElementById("tickets-modal").classList.add('hidden');
+
+    pendingTransaction = {
+        type: 'booking',
+        bookingId: bookingId,
+        name: `Dịch vụ chụp/makeup: ${providerName}`,
+        recipient: providerName,
+        price: price,
+        code: `BKCOS_${bookingId.substring(0, 6).toUpperCase()}`
+    };
+
+    document.getElementById("pay-item-name").innerText = pendingTransaction.name;
+    document.getElementById("pay-recipient").innerText = pendingTransaction.recipient;
+    document.getElementById("pay-amount").innerText = `${price.toLocaleString('vi-VN')}đ`;
+    document.getElementById("pay-code").innerText = pendingTransaction.code;
+
+    document.getElementById("payment-modal").classList.remove('hidden');
 }

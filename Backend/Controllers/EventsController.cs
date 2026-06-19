@@ -96,7 +96,8 @@ namespace CosplayEventBooking.Controllers
                 EndTime = dto.EndTime,
                 TicketPrice = dto.TicketPrice,
                 TotalTickets = dto.TotalTickets,
-                HasBooth = dto.HasBooth
+                HasBooth = dto.HasBooth,
+                BannerUrl = dto.BannerUrl
             };
 
             _db.Events.Add(newEvent);
@@ -129,6 +130,7 @@ namespace CosplayEventBooking.Controllers
             @event.TicketPrice = dto.TicketPrice;
             @event.TotalTickets = dto.TotalTickets;
             @event.HasBooth = dto.HasBooth;
+            @event.BannerUrl = dto.BannerUrl;
 
             try
             {
@@ -188,6 +190,7 @@ namespace CosplayEventBooking.Controllers
         public decimal TicketPrice { get; set; }
         public int TotalTickets { get; set; }
         public bool HasBooth { get; set; }
+        public string? BannerUrl { get; set; }
     }
 
     public class UpdateEventDto
@@ -200,5 +203,6 @@ namespace CosplayEventBooking.Controllers
         public decimal TicketPrice { get; set; }
         public int TotalTickets { get; set; }
         public bool HasBooth { get; set; }
+        public string? BannerUrl { get; set; }
     }
 }

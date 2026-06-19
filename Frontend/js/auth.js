@@ -71,7 +71,7 @@ export async function handleRegister(e) {
         if (role === "Customer" || role === "Admin") {
             showToast("Tài khoản của bạn đã được duyệt tự động. Vui lòng đăng nhập.");
         } else {
-            showToast("Tài khoản của bạn đang chờ quản trị viên (Admin) duyệt duyệt.", "warning");
+            showToast("Tài khoản của bạn đang chờ quản trị viên (Admin) duyệt.", "warning");
         }
         toggleAuthTab('login');
     } catch (err) {

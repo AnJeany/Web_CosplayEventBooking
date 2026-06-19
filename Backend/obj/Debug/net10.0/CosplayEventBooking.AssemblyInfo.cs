@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CosplayEventBooking")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e87b208326a1f4f6b9d7e0b14f2c418289a5004e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+de39a6271482704aeee098c8967f7ec446a7afea")]
 [assembly: System.Reflection.AssemblyProductAttribute("CosplayEventBooking")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CosplayEventBooking")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
