@@ -2,6 +2,14 @@ import { state, clearAuth } from './state.js';
 
 export const API_BASE = "http://localhost:5056/api";
 
+export function getImageUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('/')) {
+        return API_BASE.replace('/api', '') + url;
+    }
+    return url;
+}
+
 export async function apiGet(endpoint) {
     const headers = {};
     if (state.token) {

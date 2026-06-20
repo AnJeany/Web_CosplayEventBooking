@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { showToast } from './toast.js';
-import { apiGet, apiPost, apiPut, API_BASE } from './api.js';
+import { apiGet, apiPost, apiPut, API_BASE, getImageUrl } from './api.js';
 import { openChatWith } from './chat.js';
 import { triggerTicketPurchase, triggerServiceBooking } from './booking.js';
 
@@ -110,7 +110,7 @@ export function renderHomepage() {
                 ${filteredEvents.length > 0 ? filteredEvents.map(ev => `
                     <div class="bg-slate-900 border border-slate-800/80 rounded-2xl overflow-hidden hover:border-brand-500/50 transition-all duration-300 group flex flex-col justify-between h-[420px]">
                         <div class="relative h-44 overflow-hidden">
-                            <img src="${ev.bannerUrl || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&q=80&w=1200'}" alt="${ev.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <img src="${getImageUrl(ev.bannerUrl) || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&q=80&w=1200'}" alt="${ev.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
                             <span class="absolute top-3 right-3 ${ev.ticketPrice === 0 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-brand-500/20 text-brand-400 border-brand-500/30'} border text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full">
                                 ${ev.ticketPrice === 0 ? 'Miễn Phí' : `Có Phí: ${ev.ticketPrice.toLocaleString('vi-VN')}đ`}
@@ -210,13 +210,20 @@ export async function renderEventDetailPage(eventId) {
     }
 
     container.innerHTML = `
-        <button onclick="goHome()" class="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-brand-500 transition-colors mb-4 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Quay lại Trang Chủ
-        </button>
+        <div class="flex justify-between items-center mb-4">
+            <button onclick="goHome()" class="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-brand-500 transition-colors bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Quay lại Trang Chủ
+            </button>
+            ${(state.user && (ev.organizerId === state.user.id || state.user.role === 'Admin')) ? `
+                <button onclick="openEditEventModal('${ev.id}')" class="flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+                    ⚙️ Sửa nội dung sự kiện
+                </button>
+            ` : ''}
+        </div>
 
         <div class="relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden mb-6">
-            <div class="h-44 md:h-52 bg-cover bg-center opacity-30" style="background-image: url('${ev.bannerUrl || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&q=80&w=1200'}');"></div>
+            <div class="h-44 md:h-52 bg-cover bg-center opacity-30" style="background-image: url('${getImageUrl(ev.bannerUrl) || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&q=80&w=1200'}');"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
             
             <div class="absolute bottom-5 left-5 right-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -348,7 +355,7 @@ export async function renderActiveTabContent(ev) {
                     <div class="md:col-span-2 space-y-4">
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
                             <div class="flex items-center gap-3">
-                                <img src="${state.user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}" alt="user avatar" class="w-8 h-8 rounded-full object-cover">
+                                <img src="${getImageUrl(state.user.avatarUrl) || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}" alt="user avatar" class="w-8 h-8 rounded-full object-cover">
                                 <span class="text-xs text-slate-400">Đăng bài tự do lên góc Khám Phá!</span>
                             </div>
                             <textarea id="explore-post-text" placeholder="Hôm nay bạn thế nào? Hỏi han, tìm thợ nháy hay chia sẻ ảnh khoảnh khắc nào..." rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500"></textarea>
@@ -372,7 +379,7 @@ export async function renderActiveTabContent(ev) {
                             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
-                                        <img src="${post.author.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}" alt="${post.author.fullName}" class="w-10 h-10 rounded-full object-cover border-2 border-slate-800">
+                                        <img src="${getImageUrl(post.author.avatarUrl) || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}" alt="${post.author.fullName}" class="w-10 h-10 rounded-full object-cover border-2 border-slate-800">
                                         <div>
                                             <h4 class="font-bold text-sm text-slate-200 flex items-center gap-1.5">
                                                 <span>${post.author.fullName}</span>
@@ -383,16 +390,23 @@ export async function renderActiveTabContent(ev) {
                                             <span class="text-[9px] text-slate-500 block">${new Date(post.createdAt).toLocaleString('vi-VN')}</span>
                                         </div>
                                     </div>
-                                    <button onclick="reportPost('${post.id}')" class="text-[11px] text-slate-500 hover:text-red-400 transition-colors flex items-center gap-1">
-                                        🚨 Báo cáo
-                                    </button>
+                                    <div class="flex items-center gap-3">
+                                        ${post.author.id !== state.user.id ? `
+                                            <button onclick="openChatWith('${post.author.fullName.replace(/'/g, "\\'")}', '${post.author.id}', '${post.author.avatarUrl || ''}')" class="text-[11px] text-brand-400 hover:text-brand-300 transition-colors flex items-center gap-1 mr-2 font-semibold">
+                                                💬 Nhắn tin
+                                            </button>
+                                        ` : ''}
+                                        <button onclick="reportPost('${post.id}')" class="text-[11px] text-slate-500 hover:text-red-400 transition-colors flex items-center gap-1">
+                                            🚨 Báo cáo
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <p class="text-xs text-slate-300 leading-relaxed whitespace-pre-line">${post.content}</p>
 
                                 ${post.imageUrl ? `
                                     <div class="rounded-xl overflow-hidden max-h-[300px] border border-slate-800">
-                                        <img src="${post.imageUrl.startsWith('/') ? API_BASE.replace('/api', '') + post.imageUrl : post.imageUrl}" alt="Attached post" class="w-full h-full object-cover">
+                                        <img src="${getImageUrl(post.imageUrl)}" alt="Attached post" class="w-full h-full object-cover">
                                     </div>
                                 ` : ''}
 
@@ -447,7 +461,7 @@ export async function renderActiveTabContent(ev) {
                             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-brand-500 transition-all duration-300">
                                 <div class="flex items-start justify-between">
                                     <div class="flex items-center gap-3">
-                                        <img src="${prov.serviceProvider.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150'}" alt="${prov.serviceProvider.fullName}" class="w-12 h-12 rounded-full object-cover border-2 border-brand-500">
+                                        <img src="${getImageUrl(prov.serviceProvider.avatarUrl) || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150'}" alt="${prov.serviceProvider.fullName}" class="w-12 h-12 rounded-full object-cover border-2 border-brand-500">
                                         <div>
                                             <h4 class="font-bold text-base text-slate-100">${prov.serviceProvider.fullName}</h4>
                                             <span class="text-[10px] bg-slate-800 text-brand-400 px-2 py-0.5 rounded uppercase font-bold tracking-wider">
@@ -471,7 +485,7 @@ export async function renderActiveTabContent(ev) {
                                         ⭐ <span>5.0 (Review Demo)</span>
                                     </div>
                                     <div class="flex gap-2">
-                                        <button onclick="openChatWith('${prov.serviceProvider.fullName}', '${prov.serviceProvider.id}', '${prov.serviceProvider.avatarUrl || ''}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                        <button onclick="openChatWith('${prov.serviceProvider.fullName.replace(/'/g, "\\'")}', '${prov.serviceProvider.id}', '${getImageUrl(prov.serviceProvider.avatarUrl) || ''}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
                                             💬 Chat
                                         </button>
                                         <button onclick="triggerServiceBooking('${prov.id}')" class="bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors">
@@ -953,6 +967,157 @@ export async function submitCreateEvent(e) {
         closeCreateEventModal();
         document.getElementById("create-event-form").reset();
         await loadEvents();
+    } catch (err) {
+        showToast(err.message, "error");
+    }
+}
+
+// UPLOAD EVENT BANNER FOR CREATE EVENT
+export async function uploadEventBanner() {
+    const fileInput = document.getElementById("event-banner-file");
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const headers = {};
+    if (state.token) {
+        headers["Authorization"] = `Bearer ${state.token}`;
+    }
+
+    try {
+        showToast("Đang tải ảnh banner lên...", "success");
+        const res = await fetch(`${API_BASE}/profile/portfolio/upload`, {
+            method: "POST",
+            headers,
+            body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.message || data.Message || "Không thể tải ảnh lên.");
+        }
+
+        const imgUrl = data.imageUrl || data.ImageUrl;
+        if (imgUrl) {
+            document.getElementById("event-banner").value = imgUrl;
+            document.getElementById("event-banner-indicator").classList.remove("hidden");
+            showToast("Tải ảnh banner lên thành công!", "success");
+        } else {
+            throw new Error("Không nhận được đường dẫn ảnh từ phản hồi của máy chủ.");
+        }
+    } catch (err) {
+        showToast(err.message, "error");
+    }
+}
+
+// UPLOAD EVENT BANNER FOR EDIT EVENT
+export async function uploadEditEventBanner() {
+    const fileInput = document.getElementById("edit-event-banner-file");
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const headers = {};
+    if (state.token) {
+        headers["Authorization"] = `Bearer ${state.token}`;
+    }
+
+    try {
+        showToast("Đang tải ảnh banner lên...", "success");
+        const res = await fetch(`${API_BASE}/profile/portfolio/upload`, {
+            method: "POST",
+            headers,
+            body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.message || data.Message || "Không thể tải ảnh lên.");
+        }
+
+        const imgUrl = data.imageUrl || data.ImageUrl;
+        if (imgUrl) {
+            document.getElementById("edit-event-banner").value = imgUrl;
+            document.getElementById("edit-event-banner-indicator").classList.remove("hidden");
+            showToast("Tải ảnh banner lên thành công!", "success");
+        } else {
+            throw new Error("Không nhận được đường dẫn ảnh từ phản hồi của máy chủ.");
+        }
+    } catch (err) {
+        showToast(err.message, "error");
+    }
+}
+
+// EDIT EVENT MODAL OPERATIONS
+const toLocalISOString = (dateStr) => {
+    const d = new Date(dateStr);
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
+    return localISOTime;
+};
+
+export function openEditEventModal(eventId) {
+    const ev = state.events.find(e => e.id === eventId);
+    if (!ev) return;
+
+    document.getElementById("edit-event-id").value = ev.id;
+    document.getElementById("edit-event-title").value = ev.title;
+    document.getElementById("edit-event-desc").value = ev.description;
+    document.getElementById("edit-event-start").value = toLocalISOString(ev.startTime);
+    document.getElementById("edit-event-end").value = toLocalISOString(ev.endTime);
+    document.getElementById("edit-event-location").value = ev.location;
+    document.getElementById("edit-event-price").value = ev.ticketPrice;
+    document.getElementById("edit-event-total-tickets").value = ev.totalTickets;
+    document.getElementById("edit-event-has-booth").value = ev.hasBooth ? "true" : "false";
+    document.getElementById("edit-event-banner").value = ev.bannerUrl || "";
+    
+    if (ev.bannerUrl) {
+        document.getElementById("edit-event-banner-indicator").classList.remove("hidden");
+    } else {
+        document.getElementById("edit-event-banner-indicator").classList.add("hidden");
+    }
+
+    document.getElementById("edit-event-modal").classList.remove("hidden");
+}
+
+export function closeEditEventModal() {
+    document.getElementById("edit-event-modal").classList.add("hidden");
+}
+
+export async function submitEditEvent(e) {
+    e.preventDefault();
+    const id = document.getElementById("edit-event-id").value;
+    const title = document.getElementById("edit-event-title").value.trim();
+    const description = document.getElementById("edit-event-desc").value.trim();
+    const startTime = new Date(document.getElementById("edit-event-start").value).toISOString();
+    const endTime = new Date(document.getElementById("edit-event-end").value).toISOString();
+    const location = document.getElementById("edit-event-location").value.trim();
+    const ticketPrice = parseFloat(document.getElementById("edit-event-price").value || 0);
+    const totalTickets = parseInt(document.getElementById("edit-event-total-tickets").value || 100);
+    const hasBooth = document.getElementById("edit-event-has-booth").value === "true";
+    const bannerUrl = document.getElementById("edit-event-banner").value.trim() || null;
+
+    try {
+        await apiPut(`events/${id}`, {
+            title,
+            description,
+            startTime,
+            endTime,
+            location,
+            ticketPrice,
+            totalTickets,
+            hasBooth,
+            bannerUrl
+        });
+
+        showToast("Cập nhật thông tin sự kiện thành công!", "success");
+        closeEditEventModal();
+        await loadEvents();
+        renderEventDetailPage(id);
     } catch (err) {
         showToast(err.message, "error");
     }

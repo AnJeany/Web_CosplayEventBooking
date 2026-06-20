@@ -159,6 +159,43 @@ namespace CosplayEventBooking.Controllers
         }
 
         // =====================================================================
+        // GET /api/messages/conversations
+        // Lấy danh sách các cuộc hội thoại gần nhất của người dùng hiện tại.
+        // =====================================================================
+        [HttpGet("conversations")]
+        public async Task<IActionResult> GetConversations()
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var messages = await _db.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.Receiver)
+                .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+                .OrderByDescending(m => m.CreatedAt)
+                .ToListAsync();
+
+            var conversations = messages
+                .GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
+                .Select(g => {
+                    var latestMsg = g.First();
+                    var otherUser = latestMsg.SenderId == userId ? latestMsg.Receiver : latestMsg.Sender;
+                    return new {
+                        UserId = otherUser.Id,
+                        FullName = otherUser.FullName,
+                        AvatarUrl = otherUser.AvatarUrl,
+                        Role = otherUser.Role.ToString(),
+                        LastMessage = latestMsg.Content,
+                        LastMessageTime = latestMsg.CreatedAt
+                    };
+                })
+                .ToList();
+
+            return Ok(conversations);
+        }
+
+        // =====================================================================================
         // Helper: Tạo ConversationId deterministic từ 2 UserId
         // Sort 2 Guid để đảm bảo {A,B} và {B,A} cho cùng 1 ConversationId
         // =====================================================================

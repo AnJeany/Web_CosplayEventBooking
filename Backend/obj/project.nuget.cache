@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "CxteEw/UgrI=",
+  "dgSpecHash": "nHm9JGnbRFg=",
   "success": true,
-  "projectFilePath": "D:\\project_aspnet_api\\2\\Web_CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
+  "projectFilePath": "D:\\project_aspnet_api\\3\\Web_CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\antha\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\antha\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",
@@ -60,9 +60,9 @@
       "code": "NU1603",
       "level": "Warning",
       "message": "CosplayEventBooking depends on Microsoft.AspNetCore.Authentication.JwtBearer (>= 10.0.0-preview.2.25120.4) but Microsoft.AspNetCore.Authentication.JwtBearer 10.0.0-preview.2.25120.4 was not found. Microsoft.AspNetCore.Authentication.JwtBearer 10.0.0-preview.2.25164.1 was resolved instead.",
-      "projectPath": "D:\\project_aspnet_api\\2\\Web_CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
+      "projectPath": "D:\\project_aspnet_api\\3\\Web_CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
       "warningLevel": 1,
-      "filePath": "D:\\project_aspnet_api\\2\\Web_CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
+      "filePath": "D:\\project_aspnet_api\\3\\Web_CosplayEventBooking\\Backend\\CosplayEventBooking.csproj",
       "libraryId": "Microsoft.AspNetCore.Authentication.JwtBearer",
       "targetGraphs": [
         "net10.0"

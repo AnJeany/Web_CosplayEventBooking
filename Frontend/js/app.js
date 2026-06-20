@@ -1,11 +1,11 @@
 import { state, saveAuth, clearAuth } from './state.js';
 import { showToast } from './toast.js';
-import { API_BASE, apiGet, apiPost, apiPut } from './api.js';
+import { API_BASE, apiGet, apiPost, apiPut, getImageUrl } from './api.js';
 import { toggleAuthTab, handleLogin, handleRegister, handleLogout } from './auth.js';
 import { openChatWith, pollNewMessages, renderChatMessages, handleChatKeyPress, sendMessage, closeChat, openChatHistory } from './chat.js';
 import { openAdminModal, approveUserByAdmin, lockUserByAdmin, closeAdminModal } from './admin.js';
 import { loadMyCounts, triggerTicketPurchase, triggerServiceBooking, closeBookingConfigModal, submitBookingConfig, closePaymentModal, executeDemoPayment, openMyTickets, reviewBookingStatus, closeMyTickets } from './booking.js';
-import { loadEvents, renderApp, goHome, renderHomepage, viewEventDetail, viewHotEvent, renderEventDetailPage, switchEventTab, renderActiveTabContent, createBtcPost, uploadExplorePhoto, createExplorePost, likePost, reportPost, loadCommentsForPost, submitComment, focusCommentInput, submitBoothApplication, submitServiceConfig, approveBooth, openCreateEventModal, closeCreateEventModal, submitCreateEvent } from './events.js';
+import { loadEvents, renderApp, goHome, renderHomepage, viewEventDetail, viewHotEvent, renderEventDetailPage, switchEventTab, renderActiveTabContent, createBtcPost, uploadExplorePhoto, createExplorePost, likePost, reportPost, loadCommentsForPost, submitComment, focusCommentInput, submitBoothApplication, submitServiceConfig, approveBooth, openCreateEventModal, closeCreateEventModal, submitCreateEvent, uploadEventBanner, uploadEditEventBanner, openEditEventModal, closeEditEventModal, submitEditEvent } from './events.js';
 
 // Gắn toàn bộ hàm nghiệp vụ lên đối tượng window để HTML có thể gọi inline
 window.state = state;
@@ -64,6 +64,12 @@ window.approveBooth = approveBooth;
 window.openCreateEventModal = openCreateEventModal;
 window.closeCreateEventModal = closeCreateEventModal;
 window.submitCreateEvent = submitCreateEvent;
+window.uploadEventBanner = uploadEventBanner;
+window.uploadEditEventBanner = uploadEditEventBanner;
+window.openEditEventModal = openEditEventModal;
+window.closeEditEventModal = closeEditEventModal;
+window.submitEditEvent = submitEditEvent;
+window.getImageUrl = getImageUrl;
 
 // Dispatcher phục vụ refresh tab khi có giao dịch thành công từ modal booking/thanh toán
 window.dispatcher = {
@@ -102,7 +108,7 @@ export function syncNavbarProfile() {
     const navUsername = document.getElementById("nav-username");
     const navRoleBadge = document.getElementById("nav-role-badge");
 
-    if (navAvatar) navAvatar.src = state.user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
+    if (navAvatar) navAvatar.src = getImageUrl(state.user.avatarUrl) || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150";
     if (navUsername) navUsername.innerText = state.user.fullName;
     
     let roleText = "Khách tham dự";

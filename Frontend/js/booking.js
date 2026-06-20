@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { showToast } from './toast.js';
-import { apiGet, apiPost, apiPut } from './api.js';
+import { apiGet, apiPost, apiPut, getImageUrl } from './api.js';
+import { openChatWith } from './chat.js';
 
 let pendingTransaction = null;
 let selectedServicePost = null;
@@ -214,16 +215,22 @@ export async function openMyTickets() {
                 `;
             }
 
+            const otherUser = state.user.role === 'Customer' ? b.servicePost.serviceProvider : b.customer;
             return `
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col gap-2">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h5 class="font-bold text-xs text-slate-100">${state.user.role === 'Customer' ? b.servicePost.serviceProvider.fullName : b.customer.fullName}</h5>
+                            <h5 class="font-bold text-xs text-slate-100">${otherUser.fullName}</h5>
                             <p class="text-[9px] text-slate-500">${b.servicePost.event.title}</p>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[9px] font-bold ${statusColor} uppercase">
-                            ${b.status}
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="openChatWith('${otherUser.fullName.replace(/'/g, "\\'")}', '${otherUser.id}', '${getImageUrl(otherUser.avatarUrl) || ''}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold px-2.5 py-1 rounded transition-colors flex items-center gap-1">
+                                💬 Chat
+                            </button>
+                            <span class="px-2 py-0.5 rounded text-[9px] font-bold ${statusColor} uppercase">
+                                ${b.status}
+                            </span>
+                        </div>
                     </div>
                     <div class="text-[10px] text-slate-400 border-t border-slate-855 pt-2 space-y-1">
                         <p>🕒 <strong>Thời gian:</strong> ${startHour} - ${endHour} ngày ${dateStr}</p>
