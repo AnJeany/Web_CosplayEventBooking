@@ -29,7 +29,10 @@ namespace CosplayEventBooking.Controllers
             [FromQuery] DateTime? endTime = null,
             [FromQuery] string? location = null)
         {
-            var query = _db.Events.Include(e => e.Organizer).AsQueryable();
+            var query = _db.Events
+                .Include(e => e.Organizer)
+                .Include(e => e.TicketTypes)
+                .AsQueryable();
 
             if (startTime.HasValue)
             {
@@ -60,7 +63,10 @@ namespace CosplayEventBooking.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Event>> GetEvent(Guid id)
         {
-            var @event = await _db.Events.Include(e => e.Organizer).FirstOrDefaultAsync(e => e.Id == id);
+            var @event = await _db.Events
+                .Include(e => e.Organizer)
+                .Include(e => e.TicketTypes)
+                .FirstOrDefaultAsync(e => e.Id == id);
 
             if (@event == null)
             {
@@ -97,8 +103,23 @@ namespace CosplayEventBooking.Controllers
                 TicketPrice = dto.TicketPrice,
                 TotalTickets = dto.TotalTickets,
                 HasBooth = dto.HasBooth,
-                BannerUrl = dto.BannerUrl
+                BannerUrl = dto.BannerUrl,
+                TicketSaleStartDate = dto.TicketSaleStartDate,
+                TicketSaleEndDate = dto.TicketSaleEndDate
             };
+
+            if (dto.TicketTypes != null && dto.TicketTypes.Any())
+            {
+                foreach (var tt in dto.TicketTypes)
+                {
+                    newEvent.TicketTypes.Add(new EventTicketType
+                    {
+                        Name = tt.Name,
+                        Price = tt.Price,
+                        TotalTickets = tt.TotalTickets
+                    });
+                }
+            }
 
             _db.Events.Add(newEvent);
             await _db.SaveChangesAsync();
@@ -131,6 +152,47 @@ namespace CosplayEventBooking.Controllers
             @event.TotalTickets = dto.TotalTickets;
             @event.HasBooth = dto.HasBooth;
             @event.BannerUrl = dto.BannerUrl;
+            @event.TicketSaleStartDate = dto.TicketSaleStartDate;
+            @event.TicketSaleEndDate = dto.TicketSaleEndDate;
+
+            // Sync TicketTypes
+            var existingTicketTypes = await _db.EventTicketTypes.Where(ett => ett.EventId == id).ToListAsync();
+            
+            if (dto.TicketTypes != null)
+            {
+                // Remove existing ones that are not in the update request
+                foreach (var existing in existingTicketTypes)
+                {
+                    if (!dto.TicketTypes.Any(tt => tt.Name.Equals(existing.Name, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        _db.EventTicketTypes.Remove(existing);
+                    }
+                }
+
+                // Add or update
+                foreach (var tt in dto.TicketTypes)
+                {
+                    var existing = existingTicketTypes.FirstOrDefault(e => e.Name.Equals(tt.Name, StringComparison.OrdinalIgnoreCase));
+                    if (existing != null)
+                    {
+                        existing.Price = tt.Price;
+                        existing.TotalTickets = tt.TotalTickets;
+                    }
+                    else
+                    {
+                        @event.TicketTypes.Add(new EventTicketType
+                        {
+                            Name = tt.Name,
+                            Price = tt.Price,
+                            TotalTickets = tt.TotalTickets
+                        });
+                    }
+                }
+            }
+            else
+            {
+                _db.EventTicketTypes.RemoveRange(existingTicketTypes);
+            }
 
             try
             {
@@ -179,6 +241,13 @@ namespace CosplayEventBooking.Controllers
         }
     }
 
+    public class TicketTypeDto
+    {
+        public string Name { get; set; } = null!;
+        public decimal Price { get; set; }
+        public int TotalTickets { get; set; }
+    }
+
     public class CreateEventDto
     {
         public Guid OrganizerId { get; set; }
@@ -191,6 +260,9 @@ namespace CosplayEventBooking.Controllers
         public int TotalTickets { get; set; }
         public bool HasBooth { get; set; }
         public string? BannerUrl { get; set; }
+        public DateTime? TicketSaleStartDate { get; set; }
+        public DateTime? TicketSaleEndDate { get; set; }
+        public List<TicketTypeDto>? TicketTypes { get; set; }
     }
 
     public class UpdateEventDto
@@ -204,5 +276,8 @@ namespace CosplayEventBooking.Controllers
         public int TotalTickets { get; set; }
         public bool HasBooth { get; set; }
         public string? BannerUrl { get; set; }
+        public DateTime? TicketSaleStartDate { get; set; }
+        public DateTime? TicketSaleEndDate { get; set; }
+        public List<TicketTypeDto>? TicketTypes { get; set; }
     }
 }

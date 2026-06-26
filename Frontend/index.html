@@ -56,6 +56,26 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #ec4899;
         }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #contract-modal, #contract-print-area, #contract-print-area * {
+                visibility: visible;
+            }
+            #contract-modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
     <!-- App Coordinator Module -->
     <script type="module" src="js/app.js"></script>
@@ -303,6 +323,12 @@
                         <span>Đơn vị nhận:</span>
                         <span id="pay-recipient" class="font-semibold text-slate-200">---</span>
                     </div>
+                    <div id="payment-ticket-type-select-container" class="flex flex-col gap-1.5 hidden pt-2">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase">Chọn loại vé</label>
+                        <select id="payment-ticket-type-select" onchange="window.handlePaymentTicketTypeChange()" class="w-full bg-slate-950 text-slate-200 border border-slate-850 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+                            <!-- Loaded dynamically -->
+                        </select>
+                    </div>
                     <hr class="border-slate-800">
                     <div class="flex justify-between text-sm">
                         <span class="font-bold text-slate-300">Tổng thanh toán:</span>
@@ -438,6 +464,25 @@
                         <input type="datetime-local" id="event-end" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Mở bán vé lúc (Tùy chọn)</label>
+                        <input type="datetime-local" id="event-sale-start" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Đóng bán vé lúc (Tùy chọn)</label>
+                        <input type="datetime-local" id="event-sale-end" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase">Phân loại vé (Tùy chọn)</label>
+                        <button type="button" onclick="window.addTicketTypeInput('create')" class="text-[10px] font-bold text-brand-400 hover:text-brand-300 flex items-center gap-1">+ Thêm loại vé</button>
+                    </div>
+                    <div id="create-event-ticket-types-container" class="space-y-2 max-h-[120px] overflow-y-auto pr-1">
+                        <!-- Dynamic list -->
+                    </div>
+                </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Địa điểm tổ chức</label>
                     <input type="text" id="event-location" required placeholder="Ví dụ: Nhà thi đấu Phú Thọ, Quận 11, TP. HCM" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
@@ -512,6 +557,25 @@
                         <input type="datetime-local" id="edit-event-end" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Mở bán vé lúc (Tùy chọn)</label>
+                        <input type="datetime-local" id="edit-event-sale-start" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Đóng bán vé lúc (Tùy chọn)</label>
+                        <input type="datetime-local" id="edit-event-sale-end" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase">Phân loại vé (Tùy chọn)</label>
+                        <button type="button" onclick="window.addTicketTypeInput('edit')" class="text-[10px] font-bold text-brand-400 hover:text-brand-300 flex items-center gap-1">+ Thêm loại vé</button>
+                    </div>
+                    <div id="edit-event-ticket-types-container" class="space-y-2 max-h-[120px] overflow-y-auto pr-1">
+                        <!-- Dynamic list -->
+                    </div>
+                </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Địa điểm tổ chức</label>
                     <input type="text" id="edit-event-location" required placeholder="Ví dụ: Nhà thi đấu Phú Thọ, Quận 11, TP. HCM" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
@@ -551,6 +615,29 @@
                     💾 Cập Nhật Nội Dung Sự Kiện
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- SERVICE CONTRACT MODAL -->
+    <div id="contract-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between no-print">
+                <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    📜 Hợp Đồng Dịch Vụ Điện Tử
+                </h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.printContract()" class="bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs px-3 py-1.5 rounded-xl transition-all shadow-md shadow-brand-500/10">
+                        🖨️ In / Xuất PDF
+                    </button>
+                    <button onclick="document.getElementById('contract-modal').classList.add('hidden')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="contract-print-area" class="p-8 md:p-12 overflow-y-auto flex-1 bg-white text-slate-900 space-y-6 select-text text-sm">
+                <!-- Content will be injected dynamically -->
+            </div>
         </div>
     </div>
 

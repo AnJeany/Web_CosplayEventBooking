@@ -23,10 +23,28 @@ namespace CosplayEventBooking.Data
 
         // --- THÊM BẢNG ADMINLOG CHUẨN ---
         public DbSet<AdminLog> AdminLogs { get; set; }
+        public DbSet<EventTicketType> EventTicketTypes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Cấu hình EventTicketType
+            modelBuilder.Entity<EventTicketType>()
+                .Property(ett => ett.Price)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<EventTicketType>()
+                .HasOne(ett => ett.Event)
+                .WithMany(e => e.TicketTypes)
+                .HasForeignKey(ett => ett.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Ticket>()
+                .HasOne(t => t.TicketType)
+                .WithMany()
+                .HasForeignKey(t => t.TicketTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Cấu hình precision cho decimal để tránh SQL Server truncation
             modelBuilder.Entity<Event>()

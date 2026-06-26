@@ -13,6 +13,9 @@ namespace CosplayEventBooking.Entities
         public TicketStatus Status { get; set; } = TicketStatus.Valid;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public Guid? TicketTypeId { get; set; }
+        public EventTicketType? TicketType { get; set; }
+
         public User Customer { get; set; } = null!;
         public Event Event { get; set; } = null!;
     }

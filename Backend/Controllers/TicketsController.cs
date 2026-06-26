@@ -50,14 +50,48 @@ namespace CosplayEventBooking.Controllers
                 return BadRequest($"You can only buy up to 10 tickets for an event. You already have {userTicketCount} tickets.");
             }
 
-            // Check if there are enough remaining tickets
-            var totalTicketsSold = await _context.Tickets
-                .Where(t => t.EventId == dto.EventId)
-                .CountAsync();
-
-            if (totalTicketsSold + dto.Quantity > @event.TotalTickets)
+            // Enforce ticket sales date range
+            var now = DateTime.UtcNow;
+            if (@event.TicketSaleStartDate.HasValue && now < @event.TicketSaleStartDate.Value)
             {
-                return BadRequest("Not enough tickets left for this event.");
+                return BadRequest($"Vé chưa được mở bán. Thời gian mở bán: {@event.TicketSaleStartDate.Value:dd/MM/yyyy HH:mm} (UTC).");
+            }
+            if (@event.TicketSaleEndDate.HasValue && now > @event.TicketSaleEndDate.Value)
+            {
+                return BadRequest("Cổng bán vé đã đóng.");
+            }
+
+            EventTicketType? ticketType = null;
+            var hasTypesConfigured = await _context.EventTicketTypes.AnyAsync(ett => ett.EventId == dto.EventId);
+
+            if (dto.TicketTypeId.HasValue)
+            {
+                ticketType = await _context.EventTicketTypes.FindAsync(dto.TicketTypeId.Value);
+                if (ticketType == null || ticketType.EventId != dto.EventId)
+                {
+                    return NotFound("Loại vé không tồn tại hoặc không thuộc sự kiện này.");
+                }
+
+                if (ticketType.TicketsSold + dto.Quantity > ticketType.TotalTickets)
+                {
+                    return BadRequest($"Không đủ vé còn lại cho loại {ticketType.Name}. Số vé còn lại: {ticketType.TotalTickets - ticketType.TicketsSold}.");
+                }
+            }
+            else if (hasTypesConfigured)
+            {
+                return BadRequest("Sự kiện này yêu cầu bạn phải chọn một loại vé cụ thể.");
+            }
+            else
+            {
+                // Check standard event-wide remaining tickets (legacy)
+                var totalTicketsSold = await _context.Tickets
+                    .Where(t => t.EventId == dto.EventId)
+                    .CountAsync();
+
+                if (totalTicketsSold + dto.Quantity > @event.TotalTickets)
+                {
+                    return BadRequest("Không đủ vé còn lại cho sự kiện này.");
+                }
             }
 
             var newTickets = new List<Ticket>();
@@ -68,9 +102,15 @@ namespace CosplayEventBooking.Controllers
                 {
                     EventId = dto.EventId,
                     CustomerId = dto.CustomerId,
+                    TicketTypeId = dto.TicketTypeId,
                     QrCode = Guid.NewGuid().ToString(), // Generate a random QR Code string
                     Status = TicketStatus.Valid
                 };
+
+                if (ticketType != null)
+                {
+                    ticketType.TicketsSold += 1;
+                }
 
                 newTickets.Add(ticket);
             }
@@ -164,6 +204,7 @@ namespace CosplayEventBooking.Controllers
             var query = _context.Tickets
                 .Include(t => t.Event)
                 .Include(t => t.Customer)
+                .Include(t => t.TicketType)
                 .AsQueryable();
 
             if (customerId.HasValue)
@@ -181,6 +222,12 @@ namespace CosplayEventBooking.Controllers
                     t.QrCode,
                     Status = t.Status.ToString(),
                     t.CreatedAt,
+                    TicketType = t.TicketType != null ? new
+                    {
+                        t.TicketType.Id,
+                        t.TicketType.Name,
+                        t.TicketType.Price
+                    } : null,
                     Event = new
                     {
                         t.Event.Id,
@@ -208,6 +255,7 @@ namespace CosplayEventBooking.Controllers
     {
         public Guid EventId { get; set; }
         public Guid CustomerId { get; set; }
+        public Guid? TicketTypeId { get; set; }
         public int Quantity { get; set; }
     }
 

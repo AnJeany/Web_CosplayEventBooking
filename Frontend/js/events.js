@@ -235,16 +235,53 @@ export async function renderEventDetailPage(eventId) {
                     </p>
                 </div>
 
-                <div>
-                    ${ev.ticketPrice > 0 ? `
-                        <button onclick="triggerTicketPurchase('${ev.id}')" class="bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-brand-500/20 flex items-center gap-1.5">
-                            🎫 Mua Vé Tham Dự (${ev.ticketPrice.toLocaleString('vi-VN')}đ)
-                        </button>
-                    ` : `
-                        <button onclick="triggerTicketPurchase('${ev.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg flex items-center gap-1.5">
-                            ✅ Đăng ký tham dự miễn phí
-                        </button>
-                    `}
+                <div class="text-right">
+                    ${(() => {
+                        const now = new Date();
+                        let isSalesOpen = true;
+                        let salesOpenMsg = "";
+                        let btnClass = ev.ticketPrice > 0 ? "bg-gradient-to-r from-brand-500 to-accent-500 hover:from-brand-600 hover:to-accent-600 text-white shadow-lg shadow-brand-500/20" : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg";
+                        let btnText = ev.ticketPrice > 0 ? `🎫 Mua Vé Tham Dự (${ev.ticketPrice.toLocaleString('vi-VN')}đ)` : `✅ Đăng ký tham dự miễn phí`;
+                        let disabledAttr = "";
+
+                        if (ev.ticketSaleStartDate) {
+                            const saleStart = new Date(ev.ticketSaleStartDate);
+                            if (now < saleStart) {
+                                isSalesOpen = false;
+                                btnClass = "bg-slate-800 text-slate-500 cursor-not-allowed opacity-60";
+                                disabledAttr = "disabled";
+                                const diffMs = saleStart - now;
+                                const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                                const diffDays = Math.floor(diffHours / 24);
+                                if (diffDays > 0) {
+                                    salesOpenMsg = `<span class="block text-[10px] text-amber-400 font-semibold mt-1">⏳ Mở bán vé sau: ${diffDays} ngày</span>`;
+                                } else if (diffHours > 0) {
+                                    salesOpenMsg = `<span class="block text-[10px] text-amber-400 font-semibold mt-1">⏳ Mở bán vé sau: ${diffHours} giờ</span>`;
+                                } else {
+                                    const diffMin = Math.floor(diffMs / (1000 * 60));
+                                    salesOpenMsg = `<span class="block text-[10px] text-amber-400 font-semibold mt-1">⏳ Mở bán vé sau: ${diffMin} phút</span>`;
+                                }
+                                btnText = `⏳ Chưa đến giờ mở bán`;
+                            }
+                        }
+                        if (isSalesOpen && ev.ticketSaleEndDate) {
+                            const saleEnd = new Date(ev.ticketSaleEndDate);
+                            if (now > saleEnd) {
+                                isSalesOpen = false;
+                                btnClass = "bg-slate-800 text-slate-500 cursor-not-allowed opacity-60";
+                                disabledAttr = "disabled";
+                                btnText = `🚪 Đã đóng cổng bán vé`;
+                                salesOpenMsg = `<span class="block text-[10px] text-red-400 font-semibold mt-1">Đóng cổng bán vé lúc: ${new Date(ev.ticketSaleEndDate).toLocaleString('vi-VN')}</span>`;
+                            }
+                        }
+
+                        return `
+                            <button ${disabledAttr} onclick="triggerTicketPurchase('${ev.id}')" class="${btnClass} font-bold text-xs px-6 py-3 rounded-xl transition-all flex items-center gap-1.5 hover:scale-105">
+                                ${btnText}
+                            </button>
+                            ${salesOpenMsg}
+                        `;
+                    })()}
                 </div>
             </div>
         </div>
@@ -924,13 +961,39 @@ export async function approveBooth(boothId) {
 }
 
 // CREATE EVENT MODAL OPERATIONS
+export function addTicketTypeInput(context) {
+    const containerId = context === 'create' ? 'create-event-ticket-types-container' : 'edit-event-ticket-types-container';
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'flex gap-2 items-center class-ticket-type-row';
+    div.innerHTML = `
+        <input type="text" placeholder="Tên loại vé (Ví dụ: VIP)" required class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500 class-tt-name">
+        <input type="number" placeholder="Giá (VNĐ)" min="0" required class="w-24 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500 class-tt-price">
+        <input type="number" placeholder="SL" min="1" required class="w-16 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500 class-tt-total">
+        <button type="button" onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-300 text-xs px-2">✕</button>
+    `;
+    container.appendChild(div);
+}
+
+function toLocalISOString(dateStr) {
+    const d = new Date(dateStr);
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
+    return localISOTime;
+}
+
 export function openCreateEventModal() {
     document.getElementById("create-event-modal").classList.remove("hidden");
     const now = new Date();
     const future = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     
-    document.getElementById("event-start").value = now.toISOString().slice(0, 16);
-    document.getElementById("event-end").value = future.toISOString().slice(0, 16);
+    document.getElementById("event-start").value = toLocalISOString(now);
+    document.getElementById("event-end").value = toLocalISOString(future);
+    document.getElementById("event-sale-start").value = "";
+    document.getElementById("event-sale-end").value = "";
+    document.getElementById("create-event-ticket-types-container").innerHTML = "";
 }
 
 export function closeCreateEventModal() {
@@ -949,6 +1012,18 @@ export async function submitCreateEvent(e) {
     const hasBooth = document.getElementById("event-has-booth").value === "true";
     const bannerUrl = document.getElementById("event-banner").value.trim() || null;
 
+    const saleStartVal = document.getElementById("event-sale-start").value;
+    const saleEndVal = document.getElementById("event-sale-end").value;
+    const ticketSaleStartDate = saleStartVal ? new Date(saleStartVal).toISOString() : null;
+    const ticketSaleEndDate = saleEndVal ? new Date(saleEndVal).toISOString() : null;
+
+    const ticketTypeRows = document.querySelectorAll('#create-event-ticket-types-container .class-ticket-type-row');
+    const ticketTypes = Array.from(ticketTypeRows).map(row => ({
+        name: row.querySelector('.class-tt-name').value.trim(),
+        price: parseFloat(row.querySelector('.class-tt-price').value || 0),
+        totalTickets: parseInt(row.querySelector('.class-tt-total').value || 0)
+    }));
+
     try {
         await apiPost("events", {
             organizerId: state.user.id,
@@ -960,7 +1035,10 @@ export async function submitCreateEvent(e) {
             ticketPrice,
             totalTickets,
             hasBooth,
-            bannerUrl
+            bannerUrl,
+            ticketSaleStartDate,
+            ticketSaleEndDate,
+            ticketTypes
         });
 
         showToast("Tạo sự kiện mới thành công!", "success");
@@ -1053,12 +1131,6 @@ export async function uploadEditEventBanner() {
 }
 
 // EDIT EVENT MODAL OPERATIONS
-const toLocalISOString = (dateStr) => {
-    const d = new Date(dateStr);
-    const tzOffset = d.getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
-    return localISOTime;
-};
 
 export function openEditEventModal(eventId) {
     const ev = state.events.find(e => e.id === eventId);
@@ -1075,6 +1147,25 @@ export function openEditEventModal(eventId) {
     document.getElementById("edit-event-has-booth").value = ev.hasBooth ? "true" : "false";
     document.getElementById("edit-event-banner").value = ev.bannerUrl || "";
     
+    document.getElementById("edit-event-sale-start").value = ev.ticketSaleStartDate ? toLocalISOString(ev.ticketSaleStartDate) : "";
+    document.getElementById("edit-event-sale-end").value = ev.ticketSaleEndDate ? toLocalISOString(ev.ticketSaleEndDate) : "";
+
+    const container = document.getElementById("edit-event-ticket-types-container");
+    container.innerHTML = "";
+    if (ev.ticketTypes && ev.ticketTypes.length > 0) {
+        ev.ticketTypes.forEach(tt => {
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-center class-ticket-type-row';
+            div.innerHTML = `
+                <input type="text" value="${tt.name}" placeholder="Tên loại vé" required class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500 class-tt-name">
+                <input type="number" value="${tt.price}" placeholder="Giá" min="0" required class="w-24 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500 class-tt-price">
+                <input type="number" value="${tt.totalTickets}" placeholder="SL" min="1" required class="w-16 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500 class-tt-total">
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-300 text-xs px-2">✕</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
     if (ev.bannerUrl) {
         document.getElementById("edit-event-banner-indicator").classList.remove("hidden");
     } else {
@@ -1101,6 +1192,18 @@ export async function submitEditEvent(e) {
     const hasBooth = document.getElementById("edit-event-has-booth").value === "true";
     const bannerUrl = document.getElementById("edit-event-banner").value.trim() || null;
 
+    const saleStartVal = document.getElementById("edit-event-sale-start").value;
+    const saleEndVal = document.getElementById("edit-event-sale-end").value;
+    const ticketSaleStartDate = saleStartVal ? new Date(saleStartVal).toISOString() : null;
+    const ticketSaleEndDate = saleEndVal ? new Date(saleEndVal).toISOString() : null;
+
+    const ticketTypeRows = document.querySelectorAll('#edit-event-ticket-types-container .class-ticket-type-row');
+    const ticketTypes = Array.from(ticketTypeRows).map(row => ({
+        name: row.querySelector('.class-tt-name').value.trim(),
+        price: parseFloat(row.querySelector('.class-tt-price').value || 0),
+        totalTickets: parseInt(row.querySelector('.class-tt-total').value || 0)
+    }));
+
     try {
         await apiPut(`events/${id}`, {
             title,
@@ -1111,7 +1214,10 @@ export async function submitEditEvent(e) {
             ticketPrice,
             totalTickets,
             hasBooth,
-            bannerUrl
+            bannerUrl,
+            ticketSaleStartDate,
+            ticketSaleEndDate,
+            ticketTypes
         });
 
         showToast("Cập nhật thông tin sự kiện thành công!", "success");

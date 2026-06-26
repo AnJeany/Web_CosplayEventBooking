@@ -4,8 +4,8 @@ import { API_BASE, apiGet, apiPost, apiPut, getImageUrl } from './api.js';
 import { toggleAuthTab, handleLogin, handleRegister, handleLogout } from './auth.js';
 import { openChatWith, pollNewMessages, renderChatMessages, handleChatKeyPress, sendMessage, closeChat, openChatHistory } from './chat.js';
 import { openAdminModal, approveUserByAdmin, lockUserByAdmin, closeAdminModal } from './admin.js';
-import { loadMyCounts, triggerTicketPurchase, triggerServiceBooking, closeBookingConfigModal, submitBookingConfig, closePaymentModal, executeDemoPayment, openMyTickets, reviewBookingStatus, closeMyTickets } from './booking.js';
-import { loadEvents, renderApp, goHome, renderHomepage, viewEventDetail, viewHotEvent, renderEventDetailPage, switchEventTab, renderActiveTabContent, createBtcPost, uploadExplorePhoto, createExplorePost, likePost, reportPost, loadCommentsForPost, submitComment, focusCommentInput, submitBoothApplication, submitServiceConfig, approveBooth, openCreateEventModal, closeCreateEventModal, submitCreateEvent, uploadEventBanner, uploadEditEventBanner, openEditEventModal, closeEditEventModal, submitEditEvent } from './events.js';
+import { loadMyCounts, triggerTicketPurchase, triggerServiceBooking, closeBookingConfigModal, submitBookingConfig, closePaymentModal, executeDemoPayment, openMyTickets, reviewBookingStatus, closeMyTickets, handlePaymentTicketTypeChange, viewContract, printContract } from './booking.js';
+import { loadEvents, renderApp, goHome, renderHomepage, viewEventDetail, viewHotEvent, renderEventDetailPage, switchEventTab, renderActiveTabContent, createBtcPost, uploadExplorePhoto, createExplorePost, likePost, reportPost, loadCommentsForPost, submitComment, focusCommentInput, submitBoothApplication, submitServiceConfig, approveBooth, openCreateEventModal, closeCreateEventModal, submitCreateEvent, uploadEventBanner, uploadEditEventBanner, openEditEventModal, closeEditEventModal, submitEditEvent, addTicketTypeInput } from './events.js';
 
 // Gắn toàn bộ hàm nghiệp vụ lên đối tượng window để HTML có thể gọi inline
 window.state = state;
@@ -70,6 +70,10 @@ window.openEditEventModal = openEditEventModal;
 window.closeEditEventModal = closeEditEventModal;
 window.submitEditEvent = submitEditEvent;
 window.getImageUrl = getImageUrl;
+window.handlePaymentTicketTypeChange = handlePaymentTicketTypeChange;
+window.viewContract = viewContract;
+window.printContract = printContract;
+window.addTicketTypeInput = addTicketTypeInput;
 
 // Dispatcher phục vụ refresh tab khi có giao dịch thành công từ modal booking/thanh toán
 window.dispatcher = {
